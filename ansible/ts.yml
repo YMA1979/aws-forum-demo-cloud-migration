@@ -68,10 +68,11 @@
           {{ (atc_TS_status.json is defined) | ternary(atc_TS_status.json | to_nice_json(indent=2), atc_TS_status.content) }}
         dest: "../output/ts_{{ telemetry }}_post_result.json"
 
-    ####################################
-    # Manual verification on BIG-IP(s) #
-    ####################################
+  ####################################
+  # Manual verification on BIG-IP(s) #
+  ####################################
 
+  post_tasks:
     - name: Final result verification on BIG-IP 
       debug:
         msg: >

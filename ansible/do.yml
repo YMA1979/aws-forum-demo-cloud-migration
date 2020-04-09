@@ -59,7 +59,7 @@
       when:
         - scenario == "do_license"
         - atc_GET_status.json.declaration.Common.myLicense.revokeFrom is defined
-        - atc_GET_status.json.declaration.Common.myLicense.revokeFrom == license_pool
+        - atc_GET_status.json.declaration.Common.myLicense.revokeFrom == bigiq_license_pool
   
     - name: Process jinja template an store result for artifact storage
       template:
@@ -82,7 +82,7 @@
         atc_method: POST
         atc_declaration_file: "../output/{{ scenario }}.json"
         atc_delay: 10
-        atc_retries: 90
+        atc_retries: 60
       when: 
         - scenario == "do_license"
         - perform_license is defined
@@ -119,10 +119,11 @@
         dest: "../output/{{ scenario }}_post_result.json"
       when: scenario == "do_unlicense"
 
-    ####################################
-    # Manual verification on BIG-IP(s) #
-    ####################################
+  ####################################
+  # Manual verification on BIG-IP(s) #
+  ####################################
 
+  post_tasks:
     - name: Final result verification on BIG-IP 
       debug:
         msg: >

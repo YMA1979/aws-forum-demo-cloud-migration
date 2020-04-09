@@ -10,12 +10,12 @@ aws_azs: [ eu-west-1a ]
 
 ## BIG-IP and BIG-IQ variables
 bigip_admin_user: admin
-bigip_admin_password: changeme
+bigip_admin_password: "changeme" # Keep the quotes for fancy characters !
 
 bigiq_address: 88.84.155.36
 bigiq_admin_user: admin
-bigiq_admin_password: changeme
-bigiq_license_pool: license_pool
+bigiq_admin_password: "changeme" # Keep the quotes for fancy characters !
+bigiq_license_pool: byol-pool
 
 ## Automation Toolchain variables
 atc_tenant: Team_A

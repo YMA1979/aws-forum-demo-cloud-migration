@@ -126,10 +126,11 @@
         dest: "../output/{{ scenario }}_post_result.json"
       when: scenario == "as3_remove_tenant"
 
-    ####################################
-    # Manual verification on BIG-IP(s) #
-    ####################################
+  ####################################
+  # Manual verification on BIG-IP(s) #
+  ####################################
 
+  post_tasks:
     - name: Final result verification on BIG-IP 
       debug:
         msg: >
