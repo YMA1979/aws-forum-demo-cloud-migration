@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.11.1",
+  "class": "Device",
+  "async": true,
+  "label": "Onboard and License BIG-IP using BIG-IQ with no route",
+  "Common": {
+    "class": "Tenant",
+    "myLicense": {
+      "class": "License",
+      "licenseType": "licensePool",
+      "bigIqHost": "{{ bigiq_address }}",
+      "bigIqUsername": "{{ bigiq_admin_user }}",
+      "bigIqPassword": "{{ bigiq_admin_password }}",
+      "overwrite": true,
+      "reachable": false,
+      "hypervisor": "aws",
+      "licensePool": "{{ bigiq_license_pool }}"
+    },
+    "myDns": {
+      "class": "DNS",
+      "nameServers": [
+        "8.8.8.8"
+      ],
+      "search": [
+        "f5demo.eu"
+      ]
+    },
+    "myNtp": {
+      "class": "NTP",
+      "servers": [
+        "0.pool.ntp.org",
+        "1.pool.ntp.org",
+        "2.pool.ntp.org"
+      ],
+      "timezone": "UTC"
+    },
+    "auser": {
+      "class": "User",
+      "userType": "regular",
+      "password": "SuperSecret123!",
+      "shell": "bash"
+    },
+    "myProvisioning": {
+      "class": "Provision",
+      "ltm": "nominal",
+      "asm": "nominal"
+    }
+  }
+}

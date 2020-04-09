@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.11.1",
+  "class": "Device",
+  "async": true,
+  "label": "Unlicense BIG-IP using BIG-IQ with no route",
+  "Common": {
+    "class": "Tenant",
+    "myLicense": {
+      "class": "License",
+      "licenseType": "licensePool",
+      "bigIqHost": "{{ bigiq_address }}",
+      "bigIqUsername": "{{ bigiq_admin_user }}",
+      "bigIqPassword": "{{ bigiq_admin_password }}",
+      "overwrite": true,
+      "reachable": false,
+      "hypervisor": "aws",
+      "revokeFrom": "{{ bigiq_license_pool }}"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+
+## Your personal variables
+owner: changeme
+
+## AWS variables
+aws_region: eu-west-1
+aws_environment: forum-demo
+aws_ec2_key_name: changeme
+aws_azs: [ eu-west-1a ]
+
+## BIG-IP and BIG-IQ variables
+bigip_admin_user: admin
+bigip_admin_password: changeme
+
+bigiq_address: 88.84.155.36
+bigiq_admin_user: admin
+bigiq_admin_password: changeme
+bigiq_license_pool: license_pool
+
+## Automation Toolchain variables
+atc_tenant: Team_A
+atc_application: NginxWebServer
+atc_declaration: good
+
+## Nginx Webserver variables
+webserver_displayname: Nginx Demo WebServer

@@ -1,0 +1,137 @@
+- name: Application Services (AS3) playbook
+  hosts: tag_Role_bigip
+  connection: local
+  vars_files:
+    - ../setup.yml
+  vars:
+    auto_discovery: false
+
+  tasks:
+    - name: Check if necessary input parameters are defined
+      assert:
+        that:
+          - tenant is defined
+          - application is defined
+          - scenario is defined
+          - scenario in ['as3_deploy', 'as3_remove']
+
+    - name: Set connection provider for BIG-IP tasks
+      set_fact:
+        provider:
+          server: "{{ public_dns_name }}"
+          server_port: 8443
+          user: "{{ bigip_admin_user }}"
+          password: "{{ bigip_admin_password }}"
+          validate_certs: false          
+
+    - name: Fetch AWS credentials (needed for auto-discovery)
+      shell: aws configure get aws_access_key_id
+      register: aws_access_key_id
+      changed_when: false
+      when: scenario == "as3_deploy"
+
+    - name: Fetch AWS credentials (needed for auto-discovery)
+      shell: aws configure get aws_secret_access_key
+      register: aws_secret_access_key
+      changed_when: false
+      when: scenario == "as3_deploy"
+
+    - name: Register AWS credentials as facts
+      set_fact: 
+        aws_access_key_id={{ aws_access_key_id.stdout }}
+        aws_secret_access_key={{ aws_secret_access_key.stdout }}
+      when: scenario == "as3_deploy"
+
+    - name: Wait for BIG-IP to be ready to take configuration
+      bigip_wait:
+        timeout: 600
+        provider: "{{ provider }}"
+
+    ##########################
+    # Perform AS3 Deployment #
+    ##########################
+    
+    - name: Set initial lists to store host names and private ips of application servers
+      set_fact:
+        application_hosts: []
+        application_private_ips: []
+      when: scenario == "as3_deploy"
+
+    - name:  Get a list of private ip address of the target pool members for this application
+      set_fact:
+        application_private_ips: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list }}" 
+      vars:
+        group_name: "tag_Application_{{ application }}"
+      when: 
+        - scenario == "as3_deploy"
+        - not auto_discovery
+
+    - name: Get the ATC Declaration pointer for this Tenant and Application 
+      set_fact:
+        atc_declaration: "{{ groups[group_name] | map('extract', hostvars, ['tags','AtcDeclaration']) | list | first }}"
+      vars:
+        group_name: "tag_Application_{{ application }}"
+      when: 
+        - scenario == "as3_deploy"
+
+    - name: Process jinja template an store result for artifact storage
+      template:
+        src: "templates/{{ scenario }}_{{ atc_declaration }}.json.j2"
+        dest: "../output/{{ scenario }}_{{ atc_declaration }}.json"
+        mode: 0644
+      when: scenario == "as3_deploy"
+      
+    - name: Perform AS3 deployment
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "../output/{{ scenario }}_{{ atc_declaration }}.json"
+        atc_delay: 10
+        atc_retries: 5
+      when: scenario == "as3_deploy"
+
+    - name: Store result of AS3 deployment
+      copy:
+        content: |
+          {{ (atc_AS3_status.json is defined) | ternary(atc_AS3_status.json | to_nice_json(indent=2), atc_AS3_status.content) }}
+        dest: "../output/{{ scenario }}_post_result.json"
+      when: scenario == "as3_deploy"
+
+    #######################
+    # Perform AS3 Removal #
+    ####################### 
+
+    - name: Process jinja template an store result for artifact storage
+      template:
+        src: templates/as3_remove_tenant.json.j2
+        dest: "../output/as3_remove_tenant.json"
+        mode: 0644
+      when: scenario == "as3_remove"
+  
+    - name: Perform AS3 removal
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "../output/as3_remove_tenant.json"
+        atc_delay: 10
+        atc_retries: 5
+      when: scenario == "as3_remove"
+
+    - name: Store result of AS3 removal for artifact storage
+      copy:
+        content: |
+          {{ (atc_AS3_status.json is defined) | ternary(atc_AS3_status.json | to_nice_json(indent=2), atc_AS3_status.content) }}
+        dest: "../output/{{ scenario }}_post_result.json"
+      when: scenario == "as3_remove_tenant"
+
+    ####################################
+    # Manual verification on BIG-IP(s) #
+    ####################################
+
+    - name: Final result verification on BIG-IP Admin UI 
+      debug:
+        msg: >
+          Verify on BIG-IQ(s) if your desired results was achieved
+            > https://{{ public_dns_name }}:8443

@@ -1,0 +1,53 @@
+{
+  "class": "AS3",
+  "action": "deploy",
+  "declaration": {
+    "class": "ADC",
+    "schemaVersion": "3.7.0",
+    "id": "DemoWebServers",
+    "label": "DemoWebServers",
+    "remark": "An Demo Webserver exposed as an HTTP Application Service",
+    "{{ tenant }}": {
+      "class": "Tenant",
+      "{{ application }}": {
+        "class": "Application",
+        "template": "generic",
+        "WebServerVIP": {
+          "class": "Service_HTTP",
+          "virtualAddresses": ["0.0.0.0"],
+          "snat": "auto",
+          "pool": "WebServerPool"
+        },
+        "WebServerPool": {
+          "class": "Pool",
+          "monitors": ["http"],
+          "members": [
+            {
+              "servicePort": 80,
+{% if not auto_discovery %}
+              "serverAddresses": [
+{% for application_private_ip in application_private_ips %}
+                "{{ application_private_ip }}"{% if not loop.last %},
+{% endif %}
+{% endfor %}
+
+              ]
+{% endif %}
+{% if auto_discovery %}
+              "addressDiscovery": "aws",
+              "updateInterval": 30,
+              "tagKey": "Autodiscovery",
+              "tagValue": "true",
+              "addressRealm": "private",
+              "accessKeyId": "{{ aws_access_key_id }}",
+              "secretAccessKey": "{{ aws_secret_access_key }}",
+              "region": "{{ placement.region }}",
+              "credentialUpdate": true
+{% endif %}
+            }
+          ]
+        }
+      }
+    }
+  }
+}

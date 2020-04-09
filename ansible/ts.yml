@@ -1,0 +1,79 @@
+- name: Telemetry Streaming (TS) playbook
+  hosts: tag_Role_bigip
+  connection: local
+  vars_files:
+    - ../setup.yml
+
+  tasks:
+    - name: Check if necessary input parameters are defined
+      assert:
+        that:
+          - telemetry is defined
+          - telemetry in ['cloudwatch', 'beacon']
+
+    - name: Set connection provider for BIG-IP tasks
+      set_fact:
+        provider:
+          server: "{{ public_dns_name }}"
+          server_port: 8443
+          user: "{{ bigip_admin_user }}"
+          password: "{{ bigip_admin_password }}"
+          validate_certs: false
+
+    - name: Fetch AWS credentials (needed for cloudwatch)
+      shell: aws configure get aws_access_key_id
+      register: aws_access_key_id
+      changed_when: false
+      when: telemetry == "cloudwatch"
+
+    - name: Fetch AWS credentials (needed for cloudwatch)
+      shell: aws configure get aws_secret_access_key
+      register: aws_secret_access_key
+      changed_when: false
+      when: telemetry == "cloudwatch"
+
+    - name: Register AWS credentials as facts
+      set_fact: 
+        aws_access_key_id={{ aws_access_key_id.stdout }}
+        aws_secret_access_key={{ aws_secret_access_key.stdout }}
+      when: telemetry == "cloudwatch"
+
+    - name: Wait for BIG-IP to be ready to take configuration
+      bigip_wait:
+        timeout: 600
+        provider: "{{ provider }}"
+
+    ##########################
+    # Perform TS Deployment #
+    ##########################
+
+    - name: Process jinja template an store result for artifact storage
+      template:
+        src: templates/ts_{{ telemetry }}.json.j2
+        dest: "../output/ts_{{ telemetry }}.json"
+        mode: 0644
+  
+    - name: Perform TS registration
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "../output/ts_{{ telemetry }}.json"
+        atc_delay: 10
+        atc_retries: 5
+
+    - name: Store result of TS registration for artifact storage
+      copy:
+        content: |
+          {{ (atc_TS_status.json is defined) | ternary(atc_TS_status.json | to_nice_json(indent=2), atc_TS_status.content) }}
+        dest: "../output/ts_{{ telemetry }}_post_result.json"
+
+    ####################################
+    # Manual verification on BIG-IP(s) #
+    ####################################
+
+    - name: Final result verification on BIG-IP Admin UI 
+      debug:
+        msg: >
+          Verify on BIG-IQ(s) if your desired results was achieved
+            > https://{{ public_dns_name }}:8443

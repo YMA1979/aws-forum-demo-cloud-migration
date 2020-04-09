@@ -1,0 +1,131 @@
+- name: Declarative Onboarding (DO) playbook
+  hosts: tag_Role_bigip
+  connection: local
+  vars_files:
+    - ../setup.yml
+
+  tasks:
+    - name: Check if necessary input parameters are defined
+      assert:
+        that:
+          - scenario is defined
+          - scenario in ['do_license', 'do_unlicense']
+
+    - name: Set connection provider for BIG-IP tasks
+      set_fact:
+        provider:
+          server: "{{ public_dns_name }}"
+          server_port: 8443
+          user: "{{ bigip_admin_user }}"
+          password: "{{ bigip_admin_password }}"
+          validate_certs: false
+
+    - name: Wait for BIG-IP to be ready to take configuration
+      bigip_wait:
+        timeout: 600
+        provider: "{{ provider }}"
+
+    ###################
+    # Check Licensing #
+    ###################        
+
+    - name: Verify DO licensing
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: GET
+        atc_service: Device
+        atc_delay: 10
+        atc_retries: 60
+      when: scenario == "do_license"
+
+    - name: Store result of DO license verification
+      copy:
+        content: |
+          {{ (atc_GET_status.json is defined) | ternary(atc_GET_status.json | to_nice_json(indent=2), atc_GET_status.content) }}
+        dest: "../output/{{ scenario }}_get_result.json"
+      when: scenario == "do_license"
+
+    - name: Check if a BIP-IP is licensed
+      set_fact:
+        perform_license: true
+      when: 
+        - scenario == "do_license"
+        - atc_GET_status.content == "[]"
+
+    - name: Check if a BIP-IP has revoked license
+      set_fact:
+        perform_license: true
+      when:
+        - scenario == "do_license"
+        - atc_GET_status.json.declaration.Common.myLicense.revokeFrom is defined
+        - atc_GET_status.json.declaration.Common.myLicense.revokeFrom == license_pool
+  
+    - name: Process jinja template an store result for artifact storage
+      template:
+        src: "templates/{{ scenario }}.json.j2"
+        dest: "../output/{{ scenario }}.json"
+        mode: 0644
+      when: >
+        scenario == "do_license" and perform_license is defined and perform_license or 
+        scenario == "do_unlicense"
+
+
+    ###############################
+    # Do Licensing and Onboarding #
+    ###############################        
+
+    - name: Perform DO licensing and onboarding
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "../output/{{ scenario }}.json"
+        atc_delay: 10
+        atc_retries: 90
+      when: 
+        - scenario == "do_license"
+        - perform_license is defined
+        - perform_license
+
+    - name: Store result of DO licensing and onboarding for artifact storage
+      copy:
+        content: |
+          {{ (atc_DO_result.json is defined) | ternary(atc_DO_result.json | to_nice_json(indent=2), atc_DO_result.content) }}
+        dest: "../output/{{ scenario }}_post_result.json"
+      when: 
+        - scenario == "do_license"
+        - perform_license is defined 
+        - perform_license
+
+    ###############
+    # Unlicensing #
+    ###############
+
+    - name: Perform DO unlicensing
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "../output/{{ scenario }}.json"
+        atc_delay: 10
+        atc_retries: 60
+      when: scenario == "do_unlicense"
+
+    - name: Store result of DO unlicensing for artifact storage
+      copy:
+        content: |
+          {{ (atc_DO_result.json is defined) | ternary(atc_DO_result.json | to_nice_json(indent=2), atc_DO_result.content) }}
+        dest: "../output/{{ scenario }}_post_result.json"
+      when: scenario == "do_unlicense"
+
+    ####################################
+    # Manual verification on BIG-IP(s) #
+    ####################################
+
+    - name: Final result verification on BIG-IP Admin UI 
+      debug:
+        msg: >
+          Verify on BIG-IQ(s) if your desired results was achieved
+            > https://{{ public_dns_name }}:8443
+ 

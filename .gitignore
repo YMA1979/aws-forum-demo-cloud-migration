@@ -1,0 +1,29 @@
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+**/*.tfstate
+**/*.tfstate.*
+
+# Crash log files
+crash.log
+
+# AWS Credential file
+**/credentials.csv
+
+# EC2 Certificate files
+**/*.pem
+
+# Ansible
+**/*.retry
+
+# MAC_OS
+**/.DS_Store
+
+# Temprary artifacts
+output/*.json
+output/*.yml
+output/*.tf
+
+# Local setup file and secrets
+setup.yml
