@@ -61,6 +61,6 @@ In order to spinup the demo, a Makefile with several make targets is available. 
 ## Output:
 
 The output folder will contain :
+ - The terraform plan used for infrastructure spin-up
+ - The JSON outputs of the ATC actions (both the requests and reply bodies)
  - (Optional) The result of the dynamic inventory generation using *ansible-inventory*
- -  The JSON outputs of the ATC actions (both the requests and reply bodies)
-

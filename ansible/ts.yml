@@ -72,8 +72,12 @@
     # Manual verification on BIG-IP(s) #
     ####################################
 
-    - name: Final result verification on BIG-IP Admin UI 
+    - name: Final result verification on BIG-IP 
       debug:
         msg: >
           Verify on BIG-IQ(s) if your desired results was achieved
-            > https://{{ public_dns_name }}:8443
+            > Admin UI   : https://{{ public_dns_name }}:8443
+            > REST URI   : https://{{ public_dns_name }}:8443/mgmt/shared/telemetry/declare
+            > DOCS URL   : https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest
+            > SCHEMA REF : https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest/schema-reference.html
+            > GITHUB SRC : https://github.com/F5Networks/f5-telemetry-streaming
