@@ -1,4 +1,11 @@
 #
+# Read setup specific variables from external yaml file
+#
+locals {
+  setup = yamldecode(file(var.setup_file))
+}
+
+#
 # Provider section
 #
 provider "aws" {
@@ -7,13 +14,6 @@ provider "aws" {
 
 provider "random" {
   version = "~> 2.2"
-}
-
-#
-# Read setup specific variables from external yaml file
-#
-locals {
-  setup = yamldecode(file(var.setup_file))
 }
 
 #

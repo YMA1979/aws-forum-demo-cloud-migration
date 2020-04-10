@@ -19,7 +19,6 @@ plan_infra:
 deploy_infra: plan_infra
 	cd terraform ; \
 	terraform apply -input=false -auto-approve ${TERRAFORM_PLAN} ;
-	cd .. ; \
 	cd ansible ; \
 	ansible-inventory --yaml --list > ${ANSIBLE_DYNAMIC_AWS_INVENTORY}.yml ; \
 	ansible-inventory  --list > ${ANSIBLE_DYNAMIC_AWS_INVENTORY}.json ; \
@@ -82,7 +81,7 @@ clean_output:
 	rm -f ./output/*.yml ./output/*.json ./output/*.tf
 
 generate_load:
-	siege -c20 ec2-52-210-119-193.eu-west-1.compute.amazonaws.com  -b -t300s
+	siege -c20 ec2-18-132-75-167.eu-west-2.compute.amazonaws.com  -b -t300s
 
 
 terraform_validate:
