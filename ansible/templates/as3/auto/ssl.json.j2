@@ -7,9 +7,9 @@
     "id": "DemoWebServers",
     "label": "DemoWebServers",
     "remark": "DemoWebServers",
-    "{{ tenant }}": {
+    "{{ atc.tenant }}": {
       "class": "Tenant",
-      "{{ application }}": {
+      "{{ atc.application }}": {
         "class": "Application",
         "template": "generic",
         "WebServerVIP": {
@@ -27,16 +27,6 @@
           "members": [
             {
               "servicePort": 80,
-{% if not auto_discovery %}
-              "serverAddresses": [
-{% for application_private_ip in application_private_ips %}
-                "{{ application_private_ip }}"{% if not loop.last %},
-{% endif %}
-{% endfor %}
-
-              ]
-{% endif %}
-{% if auto_discovery %}
               "addressDiscovery": "aws",
               "updateInterval": 30,
               "tagKey": "Autodiscovery",
@@ -44,9 +34,8 @@
               "addressRealm": "private",
               "accessKeyId": "{{ aws_access_key_id }}",
               "secretAccessKey": "{{ aws_secret_access_key }}",
-              "region": "{{ placement.region }}",
+              "region": "{{ aws.region }}",
               "credentialUpdate": true
-{% endif %}
             }
           ]
         },

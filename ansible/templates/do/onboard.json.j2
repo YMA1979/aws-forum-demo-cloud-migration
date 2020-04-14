@@ -8,13 +8,13 @@
     "myLicense": {
       "class": "License",
       "licenseType": "licensePool",
-      "bigIqHost": "{{ bigiq_address }}",
-      "bigIqUsername": "{{ bigiq_admin_user }}",
-      "bigIqPassword": "{{ bigiq_admin_password }}",
+      "bigIqHost": "{{ bigiq.address }}",
+      "bigIqUsername": "{{ bigiq.admin_user }}",
+      "bigIqPassword": "{{ bigiq.admin_password }}",
       "overwrite": true,
       "reachable": false,
       "hypervisor": "aws",
-      "licensePool": "{{ bigiq_license_pool }}"
+      "licensePool": "{{ bigiq.license_pool }}"
     },
     "myDns": {
       "class": "DNS",

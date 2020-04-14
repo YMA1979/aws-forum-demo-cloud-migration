@@ -1,46 +1,46 @@
 - name: Application Services (AS3) playbook
   hosts: tag_Role_bigip
   connection: local
-  vars_files:
-    - ../setup.yml
-  vars:
-    auto_discovery: false
+  vars_files: "{{ setupfile }}"
 
   tasks:
     - name: Check if necessary input parameters are defined
       assert:
         that:
-          - tenant is defined
-          - application is defined
-          - scenario is defined
-          - scenario in ['as3_deploy', 'as3_remove']
+          - atc.tenant is defined
+          - atc.application is defined
+          - atc.scenario is defined
+          - atc.autodiscovery is defined
 
     - name: Set connection provider for BIG-IP tasks
       set_fact:
         provider:
           server: "{{ public_dns_name }}"
           server_port: 8443
-          user: "{{ bigip_admin_user }}"
-          password: "{{ bigip_admin_password }}"
+          user: "{{ bigip.admin_user }}"
+          password: "{{ bigip.admin_password }}"
           validate_certs: false          
 
+    ### Only needed in case of atc.autodiscovery true ###
     - name: Fetch AWS credentials (needed for auto-discovery)
       shell: aws configure get aws_access_key_id
       register: aws_access_key_id
       changed_when: false
-      when: scenario == "as3_deploy"
+      when: atc.autodiscovery
 
+    ### Only needed in case of atc.autodiscovery true ###
     - name: Fetch AWS credentials (needed for auto-discovery)
       shell: aws configure get aws_secret_access_key
       register: aws_secret_access_key
       changed_when: false
-      when: scenario == "as3_deploy"
+      when: atc.autodiscovery
 
+    ### Only needed in case of atc.autodiscovery true ###
     - name: Register AWS credentials as facts
       set_fact: 
         aws_access_key_id={{ aws_access_key_id.stdout }}
         aws_secret_access_key={{ aws_secret_access_key.stdout }}
-      when: scenario == "as3_deploy"
+      when: atc.autodiscovery
 
     - name: Wait for BIG-IP to be ready to take configuration
       bigip_wait:
@@ -51,80 +51,76 @@
     # Perform AS3 Deployment #
     ##########################
     
+    ### Only needed in case of atc.autodiscovery false ###
     - name: Set initial lists to store host names and private ips of application servers
       set_fact:
         application_hosts: []
         application_private_ips: []
-      when: scenario == "as3_deploy"
+      when:
+        - not atc.autodiscovery
+      tags: deploy
 
+    ### Only needed in case of atc.autodiscovery false ###
     - name:  Get a list of private ip address of the target pool members for this application
       set_fact:
         application_private_ips: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list }}" 
       vars:
-        group_name: "tag_Application_{{ application }}"
-      when: 
-        - scenario == "as3_deploy"
-        - not auto_discovery
-
-    - name: Get the ATC Declaration pointer for this Tenant and Application 
-      set_fact:
-        atc_declaration: "{{ groups[group_name] | map('extract', hostvars, ['tags','AtcDeclaration']) | list | first }}"
-      vars:
-        group_name: "tag_Application_{{ application }}"
-      when: 
-        - scenario == "as3_deploy"
+        group_name: "tag_Application_{{ atc.application }}"
+      when:
+        - not atc.autodiscovery
+      tags: deploy
 
     - name: Process jinja template an store result for artifact storage
       template:
-        src: "templates/{{ scenario }}_{{ atc_declaration }}.json.j2"
-        dest: "../output/{{ scenario }}_{{ atc_declaration }}.json"
+        src: "templates/as3/{{ atc.autodiscovery | ternary('auto', 'manual') }}/{{ atc.scenario }}.json.j2"
+        dest: "{{ outputfolder }}/as3_{{ atc.autodiscovery | ternary('auto', 'manual') }}_{{ atc.scenario }}.json"
         mode: 0644
-      when: scenario == "as3_deploy"
+      tags: deploy
       
     - name: Perform AS3 deployment
       include_role:
         name: f5devcentral.atc_deploy
       vars:
         atc_method: POST
-        atc_declaration_file: "../output/{{ scenario }}_{{ atc_declaration }}.json"
+        atc_declaration_file: "{{ outputfolder }}/as3_{{ atc.autodiscovery | ternary('auto', 'manual') }}_{{ atc.scenario }}.json"
         atc_delay: 10
         atc_retries: 5
-      when: scenario == "as3_deploy"
+      tags: deploy
 
     - name: Store result of AS3 deployment
       copy:
         content: |
           {{ (atc_AS3_status.json is defined) | ternary(atc_AS3_status.json | to_nice_json(indent=2), atc_AS3_status.content) }}
-        dest: "../output/{{ scenario }}_post_result.json"
-      when: scenario == "as3_deploy"
+        dest: "{{ outputfolder }}/as3_{{ atc.autodiscovery | ternary('auto', 'manual') }}_{{ atc.scenario }}_result.json"
+      tags: deploy
 
-    #######################
-    # Perform AS3 Removal #
-    ####################### 
+    ########################
+    # Perform AS3 Undeploy #
+    ########################
 
     - name: Process jinja template an store result for artifact storage
       template:
-        src: templates/as3_remove_tenant.json.j2
-        dest: "../output/as3_remove_tenant.json"
+        src: templates/as3/remove_tenant.json.j2
+        dest: "{{ outputfolder }}/as3_remove_tenant.json"
         mode: 0644
-      when: scenario == "as3_remove"
+      tags: undeploy
   
     - name: Perform AS3 removal
       include_role:
         name: f5devcentral.atc_deploy
       vars:
         atc_method: POST
-        atc_declaration_file: "../output/as3_remove_tenant.json"
+        atc_declaration_file: "{{ outputfolder }}/as3_remove_tenant.json"
         atc_delay: 10
         atc_retries: 5
-      when: scenario == "as3_remove"
+      tags: undeploy
 
     - name: Store result of AS3 removal for artifact storage
       copy:
         content: |
           {{ (atc_AS3_status.json is defined) | ternary(atc_AS3_status.json | to_nice_json(indent=2), atc_AS3_status.content) }}
-        dest: "../output/{{ scenario }}_post_result.json"
-      when: scenario == "as3_remove_tenant"
+        dest: "{{ outputfolder }}/as3_remove_tenant_result.json"
+      tags: undeploy
 
   ####################################
   # Manual verification on BIG-IP(s) #

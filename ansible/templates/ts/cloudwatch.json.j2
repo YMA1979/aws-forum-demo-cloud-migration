@@ -10,7 +10,7 @@
     "My_Consumer": {
         "class": "Telemetry_Consumer",
         "type": "AWS_CloudWatch",
-        "region": "{{ placement.region }}",
+        "region": "{{ aws.region }}",
         "allowSelfSignedCert": true,
         "logGroup": "{{ tags.CWLogGroup }}",
         "logStream": "{{ tags.CWLogStream }}",

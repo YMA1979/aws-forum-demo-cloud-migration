@@ -55,13 +55,14 @@ variable "application" {
   type        = string
 }
 
-variable "atc_declaration" {
-  description = "An ADC Declaration Pointer (good, better or best)"
-  type        = string
-}
-
 variable "server_display_name" {
   description = "The display name of the server visible on the homepage"
   default     = "AWS Demo WebServer"
+  type        = string
+}
+
+variable "autodiscovery" {
+  description = "AWS tag to enable auto-discovery"
+  default     = "true"
   type        = string
 }

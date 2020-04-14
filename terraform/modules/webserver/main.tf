@@ -42,7 +42,6 @@ resource "aws_instance" "webserver" {
     Role           = "webserver"
     Tenant         = var.tenant
     Application    = var.application
-    Autodiscovery  = "true"
-    AtcDeclaration = var.atc_declaration
+    Autodiscovery  = var.autodiscovery
   }
 }

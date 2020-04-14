@@ -1,0 +1,39 @@
+{
+  "class": "AS3",
+  "action": "deploy",
+  "declaration": {
+    "class": "ADC",
+    "schemaVersion": "3.7.0",
+    "id": "DemoWebServers",
+    "label": "DemoWebServers",
+    "remark": "An Demo Webserver exposed as an HTTP Application Service",
+    "{{ atc.tenant }}": {
+      "class": "Tenant",
+      "{{ atc.application }}": {
+        "class": "Application",
+        "template": "generic",
+        "WebServerVIP": {
+          "class": "Service_HTTP",
+          "virtualAddresses": ["0.0.0.0"],
+          "snat": "auto",
+          "pool": "WebServerPool"
+        },
+        "WebServerPool": {
+          "class": "Pool",
+          "monitors": ["http"],
+          "members": [
+            {
+              "servicePort": 80,
+              "serverAddresses": [
+{% filter indent(16, true) %}
+{% for application_private_ip in application_private_ips %}"{{ application_private_ip }}"{% if not loop.last %},{% endif %}{{ '\n' -}}
+{% endfor %}
+{% endfilter %}
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

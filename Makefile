@@ -2,32 +2,36 @@
 .PHONY: do_license do_unlicense as3_deploy as3_remove ts_cloudwatch  
 .PHONY: inventory install_galaxy_modules clean_output generate_load terraform_validate terraform_update
 
-SETUP_FILE=../setup.yml
-TERRAFORM_PLAN=../output/aws_tfplan.tf
-ANSIBLE_DYNAMIC_AWS_INVENTORY=../output/aws_inventory
+## Input variables ##
+SETUP_FILE=${CURDIR}/setup.yml
+TERRAFORM_FOLDER=${CURDIR}/terraform
+ANSIBLE_FOLDER=${CURDIR}/ansible
+
+## Output variables ##
+OUTPUT_FOLDER=${CURDIR}/output
+TERRAFORM_PLAN=${OUTPUT_FOLDER}/aws_tfplan.tf
+ANSIBLE_DYNAMIC_AWS_INVENTORY=${OUTPUT_FOLDER}/aws_inventory.yml
+ANSIBLE_DYNAMIC_AWS_INVENTORY_CONFIG=${OUTPUT_FOLDER}/aws_ec2.yml
+
+## Exec arguments ##
+TERRAFORM_EXTRA_ARGS=-var "setupfile=${SETUP_FILE}" -var "awsinventoryconfig=${ANSIBLE_DYNAMIC_AWS_INVENTORY_CONFIG}"
+# ANSIBLE_EXTRA_ARGS=-vvv --extra-vars "setupfile=${SETUP_FILE} outputfolder=${OUTPUT_FOLDER}"
+ANSIBLE_EXTRA_ARGS=--extra-vars "setupfile=${SETUP_FILE} outputfolder=${OUTPUT_FOLDER}"
 
 #####################
 # Terraform Targets #
 #####################
 
-plan_infra:
-	cd terraform ; \
-	terraform init -input=false ; \
-	terraform plan -out=${TERRAFORM_PLAN} -input=false -var 'setup_file=${SETUP_FILE}' ; \
-	cd ..
+plan_infra: 
+	cd ${TERRAFORM_FOLDER} && terraform init -input=false ;
+	cd ${TERRAFORM_FOLDER} && terraform plan -out=${TERRAFORM_PLAN} -input=false ${TERRAFORM_EXTRA_ARGS} ;
 
 deploy_infra: plan_infra
-	cd terraform ; \
-	terraform apply -input=false -auto-approve ${TERRAFORM_PLAN} ;
-	cd ansible ; \
-	ansible-inventory --yaml --list > ${ANSIBLE_DYNAMIC_AWS_INVENTORY}.yml ; \
-	ansible-inventory  --list > ${ANSIBLE_DYNAMIC_AWS_INVENTORY}.json ; \
-	cd ..
+	cd ${TERRAFORM_FOLDER} && terraform apply -input=false -auto-approve ${TERRAFORM_PLAN} ;
+
 
 destroy_infra: clean_output
-	cd terraform ; \
-	terraform destroy -var 'setup_file=${SETUP_FILE}' -auto-approve ; \
-	cd ..
+	cd ${TERRAFORM_FOLDER} && terraform destroy -auto-approve ${TERRAFORM_EXTRA_ARGS} ;
 
 reset_infra: destroy_infra clean_output deploy_infra inventory
 
@@ -36,32 +40,28 @@ reset_infra: destroy_infra clean_output deploy_infra inventory
 ###################
 
 ### DO Targets ###
-do_license:
-	cd ansible ; \
-	ansible-playbook do.yml --extra-vars "scenario=do_license" ; \
-	cd .. 
+do_onboard:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook do.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "unlicense" ;
 
 do_unlicense:
-	cd ansible ; \
-	ansible-playbook do.yml --extra-vars "scenario=do_unlicense" ; \
-	cd ..
+	cd ${ANSIBLE_FOLDER} && ansible-playbook do.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "onboard" ; 
 
 ### AS3 Targets ###
 as3_deploy:
-	cd ansible ; \
-	ansible-playbook as3.yml --extra-vars "scenario=as3_deploy tenant=Team_A application=NginxWebServer" ; \
-	cd ..
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "undeploy" ;
 
-as3_remove:
-	cd ansible ; \
-	ansible-playbook as3.yml --extra-vars "scenario=as3_remove tenant=Team_A application=NginxWebServer" ; \
-	cd ..
+as3_undeploy:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "deploy" ;
 
 ### TS Targets ###
 ts_cloudwatch:
-	cd ansible ; \
-	ansible-playbook ts.yml --extra-vars "telemetry=cloudwatch" ; \
-	cd ..
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "grafana,beacon" ;
+
+ts_grafana:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,beacon" ;
+
+ts_beacon:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,grafana" ;
 
 ##################
 # Helper Targets #
@@ -72,25 +72,17 @@ install_galaxy_modules:
 	ansible-galaxy collection install f5networks.f5_modules
 
 inventory:
-	cd ansible ; \
-	ansible-inventory --yaml --list > ${ANSIBLE_DYNAMIC_AWS_INVENTORY}.yml ; \
-	ansible-inventory --list > ${ANSIBLE_DYNAMIC_AWS_INVENTORY}.json ; \
-	cd ..
+	cd ${ANSIBLE_FOLDER} && ansible-inventory --yaml --list > ${ANSIBLE_DYNAMIC_AWS_INVENTORY} ;
 
 clean_output:
-	rm -f ./output/*.yml ./output/*.json ./output/*.tf
+	rm -f ${OUTPUT_FOLDER}/*.yml ${OUTPUT_FOLDER}/*.json ${OUTPUT_FOLDER}/*.tf ${OUTPUT_FOLDER}/*.sh ${OUTPUT_FOLDER}/*.pem ;
 
 generate_load:
-	siege -c20 ec2-18-132-75-167.eu-west-2.compute.amazonaws.com  -b -t300s
+	siege -c20 ec2-18-132-75-167.eu-west-2.compute.amazonaws.com  -b -t600s ;
 
+terraform_validate: 
+	cd ${TERRAFORM_FOLDER} && terraform validate ;
+	cd ${TERRAFORM_FOLDER} && terraform fmt -recursive ;
 
-terraform_validate:
-	cd terraform ; \
-	terraform validate ; \
-	terraform fmt -recursive -diff ; \
-	cd ..
-
-terraform_update:
-	cd terraform ; \
-	terraform get -update=true ; \
-	cd ..
+terraform_update: 
+	cd ${TERRAFORM_FOLDER} && terraform get -update=true ;

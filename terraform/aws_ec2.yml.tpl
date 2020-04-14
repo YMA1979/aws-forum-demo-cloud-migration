@@ -1,24 +1,17 @@
 # Ansible AWS EC2 dynamic inventory plugin
 # https://docs.ansible.com/ansible/2.6/plugins/inventory/aws_ec2.html
 plugin: aws_ec2
-regions:
-#   - eu -west-1
-#   - eu-west-2
-#   - eu-north-1
-#   - ap-southeast-1
-#   - ap-southeast-2
-#   - us-east-2
-#   - us-west-2
-filters:
-    tag:Environment: forum-demo
 
+regions:
+  - ${region}
+
+filters:
+    tag:Environment: ${environment}
 
 hostnames:
   - dns-name
+
 keyed_groups:
   # add hosts to tag_Name_Value groups for each Name/Value tag pair
   - prefix: tag
     key: tags
-  # create a group per region e.g. us_east_2
-#   - key: placement.region
-#     prefix: region

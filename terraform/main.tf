@@ -2,18 +2,26 @@
 # Read setup specific variables from external yaml file
 #
 locals {
-  setup = yamldecode(file(var.setup_file))
+  setup = yamldecode(file(var.setupfile))
 }
 
 #
 # Provider section
 #
 provider "aws" {
-  region = local.setup.aws_region
+  region = local.setup.aws.region
+}
+
+provider "local" {
+  version = "~> 1.4"
 }
 
 provider "random" {
   version = "~> 2.2"
+}
+
+provider "template" {
+  version = "~> 2.1"
 }
 
 #
@@ -32,12 +40,12 @@ resource "aws_secretsmanager_secret" "bigip" {
   tags = {
     Name        = format("%s-bigip-secret-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 }
 resource "aws_secretsmanager_secret_version" "bigip-pwd" {
   secret_id     = aws_secretsmanager_secret.bigip.id
-  secret_string = local.setup.bigip_admin_password
+  secret_string = local.setup.bigip.admin_password
 }
 
 #
@@ -51,35 +59,35 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  azs = local.setup.aws_azs
+  azs = local.setup.aws.azs
 
   public_subnets = [
-    for num in range(length(local.setup.aws_azs)) :
+    for num in range(length(local.setup.aws.azs)) :
     cidrsubnet("10.0.0.0/16", 8, num)
   ]
 
   vpc_tags = {
     Name        = format("%s-vpc-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 
   public_subnet_tags = {
     Name        = format("%s-pub-subnet-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 
   public_route_table_tags = {
     Name        = format("%s-pub-rt-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 
   igw_tags = {
     Name        = format("%s-igw-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 }
 
@@ -98,7 +106,7 @@ module "web_server_sg" {
   tags = {
     Name        = format("%s-webserver-sg-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 }
 
@@ -117,7 +125,7 @@ module "web_server_secure_sg" {
   tags = {
     Name        = format("%s-webserver-secure-sg-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 }
 
@@ -136,7 +144,7 @@ module "bigip_mgmt_secure_sg" {
   tags = {
     Name        = format("%s-mgmt-secure-sg-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 }
 
@@ -155,7 +163,7 @@ module "ssh_secure_sg" {
   tags = {
     Name        = format("%s-ssh-secure-sg-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
-    Environment = local.setup.aws_environment
+    Environment = local.setup.aws.environment
   }
 }
 
@@ -166,11 +174,11 @@ module bigip {
   source = "./modules/bigip"
 
   owner       = local.setup.owner
-  environment = local.setup.aws_environment
+  environment = local.setup.aws.environment
   random_id   = random_id.id.hex
 
-  f5_instance_count           = length(local.setup.aws_azs)
-  ec2_key_name                = local.setup.aws_ec2_key_name
+  f5_instance_count           = length(local.setup.aws.azs)
+  ec2_key_name                = local.setup.aws.ec2_key_name
   aws_secretmanager_secret_id = aws_secretsmanager_secret.bigip.id
 
   mgmt_subnet_security_group_ids = [
@@ -191,10 +199,10 @@ module webserver {
   source = "./modules/webserver"
 
   owner        = local.setup.owner
-  environment  = local.setup.aws_environment
+  environment  = local.setup.aws.environment
   random_id    = random_id.id.hex
   subnet_id    = element(module.vpc.public_subnets, 0)
-  ec2_key_name = local.setup.aws_ec2_key_name
+  ec2_key_name = local.setup.aws.ec2_key_name
   color        = ["ff5e13", "0072bb"]
   color_tag    = ["orange", "blue"]
   server_count = 2
@@ -204,8 +212,21 @@ module webserver {
     module.web_server_secure_sg.this_security_group_id
   ]
 
-  tenant              = local.setup.atc_tenant
-  application         = local.setup.atc_application
-  atc_declaration     = local.setup.atc_declaration
-  server_display_name = local.setup.webserver_displayname
+  tenant              = local.setup.atc.tenant
+  application         = local.setup.atc.application
+  server_display_name = local.setup.webserver.displayname
+  autodiscovery       = local.setup.atc.autodiscovery
+}
+
+data "template_file" "ansible_dynamic_inventory_config" {
+  template = file("${path.module}/aws_ec2.yml.tpl")
+  vars = {
+    region      = local.setup.aws.region
+    environment = local.setup.aws.environment
+  }
+}
+
+resource "local_file" "ansible_dynamic_inventory_config" {
+    content     = data.template_file.ansible_dynamic_inventory_config.rendered
+    filename    = var.awsinventoryconfig
 }

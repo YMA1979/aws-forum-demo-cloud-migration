@@ -31,9 +31,9 @@ The following things are needed to run the demo
 
 You will also need to copy setup.change.yml to setup.yml and adjust the file accordingly. Variables that are absolutely necessary are :
  - owner
- - aws_ec2_key_name
- - bigip_admin_password
- - bigiq_admin_password
+ - aws.ec2_key_name
+ - bigip.admin_password
+ - bigiq.admin_password
 
 
 ## Usage
@@ -46,11 +46,13 @@ In order to spinup the demo, a Makefile with several make targets is available. 
 | make deploy_infra | Deploy or update the infrastructure using terraform | When creating new infra from scratch or updating existing one |
 | make destroy_infra | Destroy the infrastructure | Only when demo finished |
 | make reset_infra | Destroy existing infra and create a new one from scratch | Optional |
-| make do_license | Use Ansible and ATS DO module to onboard BIG-IP using BIG-IQ | Mandatory |
+| make do_onboard | Use Ansible and ATS DO module to onboard BIG-IP using BIG-IQ | Mandatory |
 | make do_unlicense | Use Ansible and ATS DO module to unlicense BIG-IP to release license pool entry from BIG-IQ  | Optional |
 | make as3_deploy | Deploy the AS3 blobs to configure ADC configuration for the application | Mandatory |
-| make as3_remove | Deploy the AS3 blobs to remove ADC configuration for the application | Optional |
+| make as3_undeploy | Deploy the AS3 blobs to remove ADC configuration for the application | Optional |
 | make ts_cloudwatch | Enable AWS Cloudwatch monitoring using ATS TS module | Optional |
+| make ts_grafana | TODO | Optional |
+| make ts_beacon | TODO | Optional |
 | make install_galaxy_modules | Install necessary F5 Ansible Galaxy modules | Only once |
 | make inventory | Generate and store the dynamic inventory file for Ansible based on AWS infrastructure | Optional |
 | make clean_output | Remove the build artifacts from Ansible (dynamic inventory and stored ATC JSON blobs) | Optional |
@@ -63,4 +65,5 @@ In order to spinup the demo, a Makefile with several make targets is available. 
 The output folder will contain :
  - The terraform plan used for infrastructure spin-up
  - The JSON outputs of the ATC actions (both the requests and reply bodies)
+ - The generated config file for dynamic inventory generation using *ansible-inventory*
  - (Optional) The result of the dynamic inventory generation using *ansible-inventory*

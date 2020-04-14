@@ -1,23 +1,17 @@
 - name: Declarative Onboarding (DO) playbook
   hosts: tag_Role_bigip
   connection: local
-  vars_files:
-    - ../setup.yml
+  vars_files: "{{ setupfile }}"
 
   tasks:
-    - name: Check if necessary input parameters are defined
-      assert:
-        that:
-          - scenario is defined
-          - scenario in ['do_license', 'do_unlicense']
-
+  
     - name: Set connection provider for BIG-IP tasks
       set_fact:
         provider:
           server: "{{ public_dns_name }}"
           server_port: 8443
-          user: "{{ bigip_admin_user }}"
-          password: "{{ bigip_admin_password }}"
+          user: "{{ bigip.admin_user }}"
+          password: "{{ bigip.admin_password }}"
           validate_certs: false
 
     - name: Wait for BIG-IP to be ready to take configuration
@@ -25,10 +19,9 @@
         timeout: 600
         provider: "{{ provider }}"
 
-    ###################
-    # Check Licensing #
-    ###################        
-
+    ######################
+    # Precheck Licensing #
+    ######################        
     - name: Verify DO licensing
       include_role:
         name: f5devcentral.atc_deploy
@@ -37,87 +30,82 @@
         atc_service: Device
         atc_delay: 10
         atc_retries: 60
-      when: scenario == "do_license"
 
     - name: Store result of DO license verification
       copy:
         content: |
           {{ (atc_GET_status.json is defined) | ternary(atc_GET_status.json | to_nice_json(indent=2), atc_GET_status.content) }}
-        dest: "../output/{{ scenario }}_get_result.json"
-      when: scenario == "do_license"
+        dest: "{{ outputfolder }}/do_precheck_result.json"
 
     - name: Check if a BIP-IP is licensed
       set_fact:
         perform_license: true
       when: 
-        - scenario == "do_license"
         - atc_GET_status.content == "[]"
-
+  
     - name: Check if a BIP-IP has revoked license
       set_fact:
         perform_license: true
       when:
-        - scenario == "do_license"
         - atc_GET_status.json.declaration.Common.myLicense.revokeFrom is defined
         - atc_GET_status.json.declaration.Common.myLicense.revokeFrom == bigiq_license_pool
-  
-    - name: Process jinja template an store result for artifact storage
-      template:
-        src: "templates/{{ scenario }}.json.j2"
-        dest: "../output/{{ scenario }}.json"
-        mode: 0644
-      when: >
-        scenario == "do_license" and perform_license is defined and perform_license or 
-        scenario == "do_unlicense"
-
-
+ 
     ###############################
     # Do Licensing and Onboarding #
     ###############################        
+    - name: Process jinja template an store result for artifact storage
+      template:
+        src: "templates/do/onboard.json.j2"
+        dest: "{{ outputfolder }}/do_onboard.json"
+        mode: 0644
+      when: perform_license is defined and perform_license
+      tags: onboard
 
     - name: Perform DO licensing and onboarding
       include_role:
         name: f5devcentral.atc_deploy
       vars:
         atc_method: POST
-        atc_declaration_file: "../output/{{ scenario }}.json"
+        atc_declaration_file: "{{ outputfolder }}/do_onboard.json"
         atc_delay: 10
         atc_retries: 60
-      when: 
-        - scenario == "do_license"
-        - perform_license is defined
-        - perform_license
+      when: perform_license is defined and perform_license
+      tags: onboard
 
     - name: Store result of DO licensing and onboarding for artifact storage
       copy:
         content: |
           {{ (atc_DO_result.json is defined) | ternary(atc_DO_result.json | to_nice_json(indent=2), atc_DO_result.content) }}
-        dest: "../output/{{ scenario }}_post_result.json"
-      when: 
-        - scenario == "do_license"
-        - perform_license is defined 
-        - perform_license
+        dest: "{{ outputfolder }}/do_onboard_result.json"
+      when: perform_license is defined and perform_license
+      tags: onboard
 
     ###############
     # Unlicensing #
     ###############
+    - name: Process jinja template an store result for artifact storage
+      template:
+        src: "templates/do/unlicense.json.j2"
+        dest: "{{ outputfolder }}/do_unlicense.json"
+        mode: 0644
+      tags: unlicense
 
     - name: Perform DO unlicensing
       include_role:
         name: f5devcentral.atc_deploy
       vars:
         atc_method: POST
-        atc_declaration_file: "../output/{{ scenario }}.json"
+        atc_declaration_file: "{{ outputfolder }}/do_unlicense.json"
         atc_delay: 10
         atc_retries: 60
-      when: scenario == "do_unlicense"
+      tags: unlicense
 
     - name: Store result of DO unlicensing for artifact storage
       copy:
         content: |
           {{ (atc_DO_result.json is defined) | ternary(atc_DO_result.json | to_nice_json(indent=2), atc_DO_result.content) }}
-        dest: "../output/{{ scenario }}_post_result.json"
-      when: scenario == "do_unlicense"
+        dest: "../output/do_unlicense_result.json"
+      tags: unlicense
 
   ####################################
   # Manual verification on BIG-IP(s) #
