@@ -51,7 +51,7 @@ In order to spinup the demo, a Makefile with several make targets is available. 
 | make as3_deploy | Deploy the AS3 blobs to configure ADC configuration for the application | Mandatory |
 | make as3_undeploy | Deploy the AS3 blobs to remove ADC configuration for the application | Optional |
 | make ts_cloudwatch | Enable AWS Cloudwatch monitoring using ATS TS module | Optional |
-| make ts_grafana | TODO | Optional |
+| make ts_graphite | Enable Graphite monitoring using ATS TS module | Optional |
 | make ts_beacon | TODO | Optional |
 | make install_galaxy_modules | Install necessary F5 Ansible Galaxy modules | Only once |
 | make inventory | Generate and store the dynamic inventory file for Ansible based on AWS infrastructure | Optional |

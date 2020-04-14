@@ -218,6 +218,24 @@ module webserver {
   autodiscovery       = local.setup.atc.autodiscovery
 }
 
+#
+# Create Graphite Instance
+#
+module graphite {
+  source = "./modules/graphite"
+
+  owner        = local.setup.owner
+  environment  = local.setup.aws.environment
+  random_id    = random_id.id.hex
+  subnet_id    = element(module.vpc.public_subnets, 0)
+  ec2_key_name = local.setup.aws.ec2_key_name
+
+  sec_group_ids = [
+    module.web_server_sg.this_security_group_id,
+    module.web_server_secure_sg.this_security_group_id
+  ]
+}
+
 data "template_file" "ansible_dynamic_inventory_config" {
   template = file("${path.module}/aws_ec2.yml.tpl")
   vars = {

@@ -43,7 +43,6 @@
     ####################################
     # Perform TS Deployment Cloudwatch #
     ####################################
-
     - name: Process jinja template an store result for artifact storage
       template:
         src: templates/ts/cloudwatch.json.j2
@@ -68,10 +67,43 @@
         dest: "{{ outputfolder }}/ts_cloudwatch_result.json"
       tags: cloudwatch
 
+    ##################################
+    # Perform TS Deployment Graphite #
+    ##################################
+    - name:  Get a list of private ip address of the target pool members for this application
+      set_fact:
+        graphite_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
+      vars:
+        group_name: "tag_Role_graphite"
+      tags: graphite
+
+    - name: Process jinja template an store result for artifact storage
+      template:
+        src: templates/ts/graphite.json.j2
+        dest: "{{ outputfolder }}/ts_graphite.json"
+        mode: 0644
+      tags: graphite
+  
+    - name: Perform TS registration
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "{{ outputfolder }}/ts_graphite.json"
+        atc_delay: 10
+        atc_retries: 5
+      tags: graphite
+
+    - name: Store result of TS registration for artifact storage
+      copy:
+        content: |
+          {{ (atc_TS_status.json is defined) | ternary(atc_TS_status.json | to_nice_json(indent=2), atc_TS_status.content) }}
+        dest: "{{ outputfolder }}/ts_graphite_result.json"
+      tags: graphite
+  
   ####################################
   # Manual verification on BIG-IP(s) #
   ####################################
-
   post_tasks:
     - name: Final result verification on BIG-IP 
       debug:

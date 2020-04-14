@@ -19,3 +19,12 @@ output "webservers" {
       public_dns : ${join(", ", module.webserver.webserver_public_dns)}
     EOF
 }
+
+# Graphite
+output "graphite" {
+  value = <<EOF
+      private_ips: ${module.graphite.graphite_private_ip}
+      public_ips : ${module.graphite.graphite_public_ip}
+      public_dns : ${module.graphite.graphite_public_dns}
+    EOF
+}

@@ -1,0 +1,21 @@
+{
+    "class": "Telemetry",
+    "My_System": {
+        "class": "Telemetry_System",
+        "allowSelfSignedCert": true,
+        "systemPoller": {
+            "interval": 60
+        }
+    },    
+    "My_Consumer": {
+        "class": "Telemetry_Consumer",
+        "type": "Graphite",
+        "host": "{{ graphite_private_ip }}",
+        "protocol": "http",
+        "port": 2003
+    },
+    "My_Listener": {
+        "class": "Telemetry_Listener",
+        "port": 6514
+    }
+}

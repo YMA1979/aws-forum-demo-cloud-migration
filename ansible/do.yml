@@ -110,7 +110,6 @@
   ####################################
   # Manual verification on BIG-IP(s) #
   ####################################
-
   post_tasks:
     - name: Final result verification on BIG-IP 
       debug:
