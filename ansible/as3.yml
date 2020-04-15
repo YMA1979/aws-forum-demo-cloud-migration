@@ -69,7 +69,7 @@
         - not atc.autodiscovery
       tags: deploy
 
-    - name: Process jinja template an store result for artifact storage
+    - name: Process jinja template and store result for artifact storage
       template:
         src: "templates/as3/{{ atc.autodiscovery | ternary('auto', 'manual') }}/{{ atc.scenario }}.json.j2"
         dest: "{{ outputfolder }}/as3_{{ atc.autodiscovery | ternary('auto', 'manual') }}_{{ atc.scenario }}.json"
@@ -96,7 +96,7 @@
     ########################
     # Perform AS3 Undeploy #
     ########################
-    - name: Process jinja template an store result for artifact storage
+    - name: Process jinja template and store result for artifact storage
       template:
         src: templates/as3/remove_tenant.json.j2
         dest: "{{ outputfolder }}/as3_remove_tenant.json"

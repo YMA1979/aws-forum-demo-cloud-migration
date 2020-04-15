@@ -97,14 +97,13 @@ module "vpc" {
 module "web_server_sg" {
   source = "terraform-aws-modules/security-group/aws//modules/http-80"
 
-  name        = format("%s-web-server-%s", local.setup.owner, random_id.id.hex)
+  name        = format("%s-webserver-sg-%s", local.setup.owner, random_id.id.hex)
   description = "Security group for web-server with HTTP ports"
   vpc_id      = module.vpc.vpc_id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
 
   tags = {
-    Name        = format("%s-webserver-sg-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
     Environment = local.setup.aws.environment
   }
@@ -116,14 +115,13 @@ module "web_server_sg" {
 module "web_server_secure_sg" {
   source = "terraform-aws-modules/security-group/aws//modules/https-443"
 
-  name        = format("%s-web-server-secure-%s", local.setup.owner, random_id.id.hex)
+  name        = format("%s-webserver-secure-sg-%s", local.setup.owner, random_id.id.hex)
   description = "Security group for web-server with HTTPS ports"
   vpc_id      = module.vpc.vpc_id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
 
   tags = {
-    Name        = format("%s-webserver-secure-sg-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
     Environment = local.setup.aws.environment
   }
@@ -135,7 +133,7 @@ module "web_server_secure_sg" {
 module "bigip_mgmt_secure_sg" {
   source = "terraform-aws-modules/security-group/aws//modules/https-8443"
 
-  name        = format("%s-bigip-mgmt-%s", local.setup.owner, random_id.id.hex)
+  name        = format("%s-bigip-mgmt-sg-%s", local.setup.owner, random_id.id.hex)
   description = "Security group for BIG-IP MGMT Interface"
   vpc_id      = module.vpc.vpc_id
 
@@ -154,14 +152,31 @@ module "bigip_mgmt_secure_sg" {
 module "ssh_secure_sg" {
   source = "terraform-aws-modules/security-group/aws//modules/ssh"
 
-  name        = format("%s-ssh-%s", local.setup.owner, random_id.id.hex)
+  name        = format("%s-ssh-sg-%s", local.setup.owner, random_id.id.hex)
   description = "Security group for SSH ports open within VPC"
   vpc_id      = module.vpc.vpc_id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
 
   tags = {
-    Name        = format("%s-ssh-secure-sg-%s", local.setup.owner, random_id.id.hex)
+    Terraform   = "true"
+    Environment = local.setup.aws.environment
+  }
+}
+
+#
+# Create a security group for http-3000 grafana traffic
+#
+module "grafana_sg" {
+  source = "github.com/AllBitsBVBA/terraform-aws-security-group//modules/grafana?ref=v3.4.0.2"
+
+  name        = format("%s-grafana-sg-%s", local.setup.owner, random_id.id.hex)
+  description = "Security group for HTTP port 3000 (Grafana Dashboard)"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+
+  tags = {
     Terraform   = "true"
     Environment = local.setup.aws.environment
   }
@@ -221,8 +236,8 @@ module webserver {
 #
 # Create Graphite Instance
 #
-module graphite {
-  source = "./modules/graphite"
+module graphite_grafana {
+  source = "./modules/graphite_grafana"
 
   owner        = local.setup.owner
   environment  = local.setup.aws.environment
@@ -232,7 +247,7 @@ module graphite {
 
   sec_group_ids = [
     module.web_server_sg.this_security_group_id,
-    module.web_server_secure_sg.this_security_group_id
+    module.grafana_sg.this_security_group_id
   ]
 }
 
@@ -247,4 +262,16 @@ data "template_file" "ansible_dynamic_inventory_config" {
 resource "local_file" "ansible_dynamic_inventory_config" {
     content     = data.template_file.ansible_dynamic_inventory_config.rendered
     filename    = var.awsinventoryconfig
+}
+
+data "template_file" "generate_load_script" {
+  template = file("${path.module}/generate_load.sh.tpl")
+  vars = {
+    bigip_address = element(module.bigip.mgmt_public_dns, 0)
+  }
+}
+
+resource "local_file" "generate_load_script" {
+    content     = data.template_file.generate_load_script.rendered
+    filename    = var.generateloadscript
 }

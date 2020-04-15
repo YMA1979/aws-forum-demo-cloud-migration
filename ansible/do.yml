@@ -53,7 +53,7 @@
     ###############################
     # Do Licensing and Onboarding #
     ###############################        
-    - name: Process jinja template an store result for artifact storage
+    - name: Process jinja template and store result for artifact storage
       template:
         src: "templates/do/onboard.json.j2"
         dest: "{{ outputfolder }}/do_onboard.json"
@@ -83,7 +83,7 @@
     ###############
     # Unlicensing #
     ###############
-    - name: Process jinja template an store result for artifact storage
+    - name: Process jinja template and store result for artifact storage
       template:
         src: "templates/do/unlicense.json.j2"
         dest: "{{ outputfolder }}/do_unlicense.json"

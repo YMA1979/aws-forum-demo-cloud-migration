@@ -12,5 +12,9 @@
         "*.yml.jinja2": "yaml",
         "*.yml.j2": "yaml",
         "*.yml.tpl": "yaml",
+        "*.sh.jinja": "shellscript",
+        "*.sh.jinja2": "shellscript",
+        "*.sh.j2": "shellscript",
+        "*.sh.tpl": "shellscript"
     }
 }

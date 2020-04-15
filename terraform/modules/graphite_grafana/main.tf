@@ -14,9 +14,9 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_instance" "graphite" {
+resource "aws_instance" "graphite_grafana" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
+  instance_type          = "t2.medium"
   key_name               = var.ec2_key_name
   monitoring             = true
   vpc_security_group_ids = var.sec_group_ids
@@ -26,10 +26,10 @@ resource "aws_instance" "graphite" {
   user_data = file("${path.module}/bootstrap.sh")
 
   tags = {
-    Name           = format("%s-graphite-%s", var.owner, var.random_id)
+    Name           = format("%s-graphite-grafana-%s", var.owner, var.random_id)
     Terraform      = "true"
     Environment    = var.environment
     Owner          = var.owner
-    Role           = "graphite"
+    Role           = "graphite_grafana"
   }
 }

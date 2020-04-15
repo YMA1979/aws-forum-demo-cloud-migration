@@ -43,7 +43,7 @@
     ####################################
     # Perform TS Deployment Cloudwatch #
     ####################################
-    - name: Process jinja template an store result for artifact storage
+    - name: Process jinja template and store result for artifact storage
       template:
         src: templates/ts/cloudwatch.json.j2
         dest: "{{ outputfolder }}/ts_cloudwatch.json"
@@ -73,16 +73,17 @@
     - name:  Get a list of private ip address of the target pool members for this application
       set_fact:
         graphite_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
+        grafana_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
       vars:
-        group_name: "tag_Role_graphite"
-      tags: graphite
+        group_name: "tag_Role_graphite_grafana"
+      tags: graphite_grafana
 
-    - name: Process jinja template an store result for artifact storage
+    - name: Process jinja template and store result for artifact storage
       template:
         src: templates/ts/graphite.json.j2
         dest: "{{ outputfolder }}/ts_graphite.json"
         mode: 0644
-      tags: graphite
+      tags: graphite_grafana
   
     - name: Perform TS registration
       include_role:
@@ -92,15 +93,54 @@
         atc_declaration_file: "{{ outputfolder }}/ts_graphite.json"
         atc_delay: 10
         atc_retries: 5
-      tags: graphite
+      tags: graphite_grafana
 
     - name: Store result of TS registration for artifact storage
       copy:
         content: |
           {{ (atc_TS_status.json is defined) | ternary(atc_TS_status.json | to_nice_json(indent=2), atc_TS_status.content) }}
         dest: "{{ outputfolder }}/ts_graphite_result.json"
-      tags: graphite
+      tags: graphite_grafana
+
+    - name: Process jinja template and store result for artifact storage
+      template:
+        src: templates/grafana/datasource_graphite.json.j2
+        dest: "{{ outputfolder }}/grafana_datasource_graphite.json"
+        mode: 0644
+      tags: graphite_grafana
   
+    - name: Check of graphite datasource for grafana already exists
+      uri:
+        url: "http://{{ grafana_public_ip }}:3000/api/datasources"
+        user: admin
+        password: admin
+        method: GET
+        force_basic_auth: yes
+        status_code: 200
+      register: get_result
+      until: get_result.status == 200
+      retries: 30
+      delay: 10
+      tags: graphite_grafana
+
+    - name: Add graphite datasource into grafana
+      uri:
+        url: "http://{{ grafana_public_ip }}:3000/api/datasources"
+        user: admin
+        password: admin
+        method: POST
+        body: "{{ lookup('file','{{ outputfolder }}/grafana_datasource_graphite.json') }}"
+        force_basic_auth: yes
+        status_code: 200
+        body_format: json
+      register: post_result
+      until: post_result.status == 200
+      retries: 30
+      delay: 10
+      when: >
+        (get_result.json is defined and get_result.json | length == 0) or get_result.json is undefined
+      tags: graphite_grafana
+
   ####################################
   # Manual verification on BIG-IP(s) #
   ####################################

@@ -12,9 +12,10 @@ OUTPUT_FOLDER=${CURDIR}/output
 TERRAFORM_PLAN=${OUTPUT_FOLDER}/aws_tfplan.tf
 ANSIBLE_DYNAMIC_AWS_INVENTORY=${OUTPUT_FOLDER}/aws_inventory.yml
 ANSIBLE_DYNAMIC_AWS_INVENTORY_CONFIG=${OUTPUT_FOLDER}/aws_ec2.yml
+GENERATE_LOAD_SCRIPT=${OUTPUT_FOLDER}/generate_load.sh
 
 ## Exec arguments ##
-TERRAFORM_EXTRA_ARGS=-var "setupfile=${SETUP_FILE}" -var "awsinventoryconfig=${ANSIBLE_DYNAMIC_AWS_INVENTORY_CONFIG}"
+TERRAFORM_EXTRA_ARGS=-var "setupfile=${SETUP_FILE}" -var "awsinventoryconfig=${ANSIBLE_DYNAMIC_AWS_INVENTORY_CONFIG}" -var "generateloadscript=${GENERATE_LOAD_SCRIPT}"
 # ANSIBLE_EXTRA_ARGS=-vvv --extra-vars "setupfile=${SETUP_FILE} outputfolder=${OUTPUT_FOLDER}"
 ANSIBLE_EXTRA_ARGS=--extra-vars "setupfile=${SETUP_FILE} outputfolder=${OUTPUT_FOLDER}"
 
@@ -55,13 +56,13 @@ as3_undeploy:
 
 ### TS Targets ###
 ts_cloudwatch:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "graphite,beacon" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "graphite_grafana,beacon" ;
 
-ts_graphite:
+ts_graphite_grafana:
 	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,beacon" ;
 
 ts_beacon:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,graphite" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,graphite_grafana" ;
 
 ##################
 # Helper Targets #
@@ -77,8 +78,11 @@ inventory:
 clean_output:
 	rm -f ${OUTPUT_FOLDER}/*.yml ${OUTPUT_FOLDER}/*.json ${OUTPUT_FOLDER}/*.tf ${OUTPUT_FOLDER}/*.sh ${OUTPUT_FOLDER}/*.pem ;
 
-generate_load:
-	siege -c20 ec2-18-132-75-167.eu-west-2.compute.amazonaws.com  -b -t600s ;
+generate_load_http:
+	${OUTPUT_FOLDER}/generate_load.sh 80 ;
+
+generate_load_https:
+	${OUTPUT_FOLDER}/generate_load.sh 443 ;
 
 terraform_validate: 
 	cd ${TERRAFORM_FOLDER} && terraform validate ;
