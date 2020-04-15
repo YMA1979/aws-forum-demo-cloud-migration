@@ -79,10 +79,7 @@ clean_output:
 	rm -f ${OUTPUT_FOLDER}/*.yml ${OUTPUT_FOLDER}/*.json ${OUTPUT_FOLDER}/*.tf ${OUTPUT_FOLDER}/*.sh ${OUTPUT_FOLDER}/*.pem ;
 
 generate_load_http:
-	${OUTPUT_FOLDER}/generate_load.sh 80 ;
-
-generate_load_https:
-	${OUTPUT_FOLDER}/generate_load.sh 443 ;
+	${OUTPUT_FOLDER}/generate_load.sh ;
 
 terraform_validate: 
 	cd ${TERRAFORM_FOLDER} && terraform validate ;
