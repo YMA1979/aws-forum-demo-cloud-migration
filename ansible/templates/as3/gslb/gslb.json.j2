@@ -1,0 +1,100 @@
+{
+  "class": "ADC",
+  "schemaVersion": "3.6.0",
+  "id": "GSLB_Sample",
+  "GSLB_App_Services": {
+    "class": "Tenant",
+    "Application": {
+      "class": "Application",
+      "template": "generic",
+      "testDomain": {
+        "class": "GSLB_Domain",
+        "domainName": "service.f5demo.eu",
+        "resourceRecordType": "A",
+        "poolLbMode": "ratio",
+        "pools": [
+            { "use": "service-equinix-pool" },
+            { "use": "service-aws-eu-pool" }
+        ]
+      },
+      "service-equinix-pool": {
+         "class": "GSLB_Pool",
+        "enabled": true,
+        "members": [
+          {
+            "ratio": 1,
+            "server": {
+              "use": "/Common/Shared/bigip-eu-equinix-dc"
+            },
+            "virtualServer": "0"
+          }
+        ],
+        "resourceRecordType": "A"
+      },
+      "service-aws-eu-pool": {
+         "class": "GSLB_Pool",
+        "enabled": true,
+        "members": [
+          {
+            "ratio": 1,
+            "server": {
+              "use": "/Common/Shared/bigip-aws-eu"
+            },
+            "virtualServer": "0"
+          }
+        ],
+        "resourceRecordType": "A"
+      }
+    }
+  },
+  "Common": {
+    "class": "Tenant",
+    "Shared": {
+      "class": "Application",
+      "template": "shared",
+      "equinix-dc-ams": {
+        "class": "GSLB_Data_Center"
+      },
+      "aws-eu": {
+        "class": "GSLB_Data_Center"
+      },
+      "bigip-eu-equinix-dc": {
+        "class": "GSLB_Server",
+        "dataCenter": {
+          "use": "equinix-dc-ams"
+        },
+        "devices": [
+          {
+            "address": "88.84.155.38"
+          }
+        ],
+        "virtualServers": [
+          {
+            "address": "88.84.155.37",
+            "port": 443
+          }
+        ]
+      },
+       "bigip-aws-eu": {
+        "class": "GSLB_Server",
+        "dataCenter": {
+          "use": "aws-eu"
+        },
+        "devices": [
+          {
+            "address": "3.127.31.154"
+          }
+        ],
+        "virtualServers": [
+          {
+            "address": "3.127.31.154",
+            "addressTranslation": "3.127.31.154",
+            "addressTranslationPort": 443,
+            "port": 443,
+            "monitors": [{"bigip": "/Common/https"}]
+          }
+        ]
+      }
+    }
+  }
+}

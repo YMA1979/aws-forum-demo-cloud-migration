@@ -48,7 +48,9 @@ In order to spinup the demo, a Makefile with several make targets is available. 
 | make reset_infra | Destroy existing infra and create a new one from scratch | Optional |
 | make do_onboard | Use Ansible and ATS DO module to onboard BIG-IP using BIG-IQ | Mandatory |
 | make do_unlicense | Use Ansible and ATS DO module to unlicense BIG-IP to release license pool entry from BIG-IQ  | Optional |
-| make as3_deploy | Deploy the AS3 blobs to configure ADC configuration for the application | Mandatory |
+| make as3_http_auto | Deploy the AS3 blobs for scenario HTTP with autodiscovery | Mandatory |
+| make as3_ssl_manual | Deploy the AS3 blobs for scenario SSL without autodiscovery | Mandatory |
+| make as3_waf_manual | Deploy the AS3 blobs for scenario SSL+WAF without autodiscovery | Mandatory |
 | make as3_undeploy | Deploy the AS3 blobs to remove ADC configuration for the application | Optional |
 | make ts_cloudwatch | Enable AWS Cloudwatch monitoring using ATS TS module | Optional |
 | make ts_graphite | Enable Graphite monitoring using ATS TS module | Optional |

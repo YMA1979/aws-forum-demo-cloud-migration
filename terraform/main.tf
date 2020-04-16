@@ -230,7 +230,7 @@ module webserver {
   tenant              = local.setup.atc.tenant
   application         = local.setup.atc.application
   server_display_name = local.setup.webserver.displayname
-  autodiscovery       = local.setup.atc.autodiscovery
+  autodiscovery       = "true"
 }
 
 #
@@ -260,8 +260,8 @@ data "template_file" "ansible_dynamic_inventory_config" {
 }
 
 resource "local_file" "ansible_dynamic_inventory_config" {
-    content     = data.template_file.ansible_dynamic_inventory_config.rendered
-    filename    = var.awsinventoryconfig
+  content  = data.template_file.ansible_dynamic_inventory_config.rendered
+  filename = var.awsinventoryconfig
 }
 
 data "template_file" "generate_load_script" {
@@ -272,6 +272,6 @@ data "template_file" "generate_load_script" {
 }
 
 resource "local_file" "generate_load_script" {
-    content     = data.template_file.generate_load_script.rendered
-    filename    = var.generateloadscript
+  content  = data.template_file.generate_load_script.rendered
+  filename = var.generateloadscript
 }

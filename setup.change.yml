@@ -24,8 +24,6 @@ bigiq:
 atc:
     tenant: Team_A
     application: NginxWebServer
-    scenario: waf # http, ssl, waf
-    autodiscovery: true
 
 ## Nginx Webserver variables
 webserver:

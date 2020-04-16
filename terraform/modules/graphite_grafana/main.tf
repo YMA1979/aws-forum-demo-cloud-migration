@@ -26,10 +26,10 @@ resource "aws_instance" "graphite_grafana" {
   user_data = file("${path.module}/bootstrap.sh")
 
   tags = {
-    Name           = format("%s-graphite-grafana-%s", var.owner, var.random_id)
-    Terraform      = "true"
-    Environment    = var.environment
-    Owner          = var.owner
-    Role           = "graphite_grafana"
+    Name        = format("%s-graphite-grafana-%s", var.owner, var.random_id)
+    Terraform   = "true"
+    Environment = var.environment
+    Owner       = var.owner
+    Role        = "graphite_grafana"
   }
 }

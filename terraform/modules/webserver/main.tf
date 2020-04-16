@@ -18,7 +18,7 @@ resource "aws_instance" "webserver" {
   count = var.server_count
 
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
+  instance_type          = "t3.micro"
   key_name               = var.ec2_key_name
   monitoring             = true
   vpc_security_group_ids = var.sec_group_ids
@@ -34,14 +34,14 @@ resource "aws_instance" "webserver" {
   )
 
   tags = {
-    Name           = format("%s-webserver-%s-%s", var.owner, var.color_tag[count.index], var.random_id)
-    Terraform      = "true"
-    Environment    = var.environment
-    Owner       = var.owner
-    Color          = var.color_tag[count.index]
-    Role           = "webserver"
-    Tenant         = var.tenant
-    Application    = var.application
-    Autodiscovery  = var.autodiscovery
+    Name          = format("%s-webserver-%s-%s", var.owner, var.color_tag[count.index], var.random_id)
+    Terraform     = "true"
+    Environment   = var.environment
+    Owner         = var.owner
+    Color         = var.color_tag[count.index]
+    Role          = "webserver"
+    Tenant        = var.tenant
+    Application   = var.application
+    Autodiscovery = var.autodiscovery
   }
 }
