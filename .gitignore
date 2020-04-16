@@ -24,6 +24,7 @@ crash.log
 output/*.json
 output/*.yml
 output/*.tf
+output/*.sh
 
 # Local setup file and secrets
 setup.yml

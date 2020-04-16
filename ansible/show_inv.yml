@@ -1,0 +1,56 @@
+- name: Some example on how to read the dynamic inventory
+  hosts: all
+  connection: local
+
+  tasks:
+  
+    # Ref: https://docs.ansible.com/ansible/latest/reference_appendices/special_variables.html
+    - name: Show all hosts in the dynamic inventory file
+      debug:
+        msg: |
+          Inventory hostname       : {{ inventory_hostname }} 
+          Inventory hostname short : {{ inventory_hostname_short }}
+
+    - name: Show all public/private IPs and DNS names
+      debug:
+        msg: |
+          Public IP   : {{ public_ip_address }} 
+          Private IP  : {{ private_ip_address }}
+          Public DNS  : {{ public_dns_name }}
+          Private DNS : {{ private_dns_name }}
+
+    - name: Show all groups in the dynamic inventory file
+      run_once: true
+      debug:
+        msg: |
+          Groups   : {{ groups | to_nice_json }}
+
+    - name: Show all the AWS tags attached to the instances of your dynamic inventory file
+      run_once: true
+      debug:
+        msg: |
+          Host        : {{ inventory_hostname }}
+          Instance ID : {{ instance_id }}
+          Tags        : {{ tags | to_nice_json }}
+    
+    - name: Get all public IP addresses of the webservers (tagged as Application=NginxWebServer)
+      run_once: true
+      debug:
+        msg: |
+          Host       : {{ item }}
+          Private IP : {{ hostvars[item].public_ip_address }}
+      with_items: "{{ groups['tag_Application_NginxWebServer'] }}"
+
+    # The first time this with_items loop runs, the list 'private_ips' does not exist and
+    # is initialsed with default([]) to make an empty list
+    # After that, list concatenation (eg. [a] + [b]) is used to grow the list with all IPs
+    - name: Get all private IP addresses of the webservers in a single list
+      run_once: true
+      set_fact:
+        private_ips: "{{ private_ips|default([]) + [hostvars[item].public_ip_address] }}"
+      with_items: "{{ groups['tag_Application_NginxWebServer'] }}"
+     
+    - name: Print the list of private IP addresses of the webserver set as fact in previous step
+      run_once: true
+      debug:
+        var: private_ips

@@ -96,3 +96,6 @@ terraform_validate:
 
 terraform_update: 
 	cd ${TERRAFORM_FOLDER} && terraform get -update=true ;
+
+test:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook show_inv.yml ${ANSIBLE_EXTRA_ARGS}
