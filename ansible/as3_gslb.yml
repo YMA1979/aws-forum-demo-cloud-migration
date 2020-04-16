@@ -1,0 +1,89 @@
+- name: Application Services (AS3) playbook
+  hosts: tag_Role_bigip
+  connection: local
+  vars_files: "{{ setupfile }}"
+
+  tasks:
+    - name: Check if necessary input parameters are defined
+      assert:
+        that:
+          - atc.tenant is defined
+          - atc.application is defined
+
+    - name: Set connection provider for BIG-IP tasks
+      set_fact:
+        provider:
+          server: "{{ public_dns_name }}"
+          server_port: 8443
+          user: "{{ bigip.admin_user }}"
+          password: "{{ bigip.admin_password }}"
+          validate_certs: false          
+
+    ##########################
+    # Perform AS3 Deployment #
+    ##########################
+
+    - name: Process jinja template and store result for artifact storage (gslb)
+      template:
+        src: "templates/as3/gslb/gslb.json.j2"
+        dest: "{{ outputfolder }}/as3_gslb.json"
+        mode: 0644
+      tags: deploy
+      
+    - name: Perform AS3 deployment (gslb)
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "{{ outputfolder }}/as3_gslb.json"
+        atc_delay: 10
+        atc_retries: 5
+      tags: deploy
+
+    - name: Store result of AS3 deployment (gslb)
+      copy:
+        content: |
+          {{ (atc_AS3_status.json is defined) | ternary(atc_AS3_status.json | to_nice_json(indent=2), atc_AS3_status.content) }}
+        dest: "{{ outputfolder }}/as3_gslb_result.json"
+      tags: deploy
+
+    ########################
+    # Perform AS3 Undeploy #
+    ########################
+    - name: Process jinja template and store result for artifact storage
+      template:
+        src: templates/gslb/remove_gslb.json.j2
+        dest: "{{ outputfolder }}/as3_remove_gslb.json"
+        mode: 0644
+      tags: undeploy
+  
+    - name: Perform AS3 removal
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "{{ outputfolder }}/as3_remove_gslb.json"
+        atc_delay: 10
+        atc_retries: 5
+      tags: undeploy
+
+    - name: Store result of AS3 removal for artifact storage
+      copy:
+        content: |
+          {{ (atc_AS3_status.json is defined) | ternary(atc_AS3_status.json | to_nice_json(indent=2), atc_AS3_status.content) }}
+        dest: "{{ outputfolder }}/as3_remove_gslb_result.json"
+      tags: undeploy
+
+  ####################################
+  # Manual verification on BIG-IP(s) #
+  ####################################
+  post_tasks:
+    - name: Final result verification on BIG-IP 
+      debug:
+        msg: >
+          Verify on BIG-IQ(s) if your desired results was achieved
+            > Admin UI : https://{{ public_dns_name }}:8443
+            > REST URI : https://{{ public_dns_name }}:8443/mgmt/shared/appsvcs/declare
+            > DOCS URL   : https://clouddocs.f5.com/products/extensions/f5-appsvcs-extension/latest
+            > SCHEMA REF : https://clouddocs.f5.com/products/extensions/f5-appsvcs-extension/latest/refguide/schema-reference.html
+            > GITHUB SRC : https://github.com/F5Networks/f5-appsvcs-extension

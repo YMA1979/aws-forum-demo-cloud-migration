@@ -49,16 +49,19 @@ do_unlicense:
 
 ### AS3 Targets ###
 as3_http_auto:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook as3.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=http autodiscovery=true" --skip-tags "undeploy" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_auto.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=http" --skip-tags "undeploy" ;
 
 as3_ssl_manual: as3_undeploy
-	cd ${ANSIBLE_FOLDER} && ansible-playbook as3.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=ssl autodiscovery=false" --skip-tags "undeploy" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_manual.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=ssl" --skip-tags "undeploy" ;
 
 as3_waf_manual:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook as3.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=waf autodiscovery=false" --skip-tags "undeploy" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_manual.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=waf" --skip-tags "undeploy" ;
+
+as3_gslb:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_gslb.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "undeploy" ;
 
 as3_undeploy:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook as3.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=http autodiscovery=true" --skip-tags "deploy" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_manual.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=http" --skip-tags "deploy" ;
 
 ### TS Targets ###
 ts_cloudwatch:

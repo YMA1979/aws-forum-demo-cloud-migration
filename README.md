@@ -51,6 +51,7 @@ In order to spinup the demo, a Makefile with several make targets is available. 
 | make as3_http_auto | Deploy the AS3 blobs for scenario HTTP with autodiscovery | Mandatory |
 | make as3_ssl_manual | Deploy the AS3 blobs for scenario SSL without autodiscovery | Mandatory |
 | make as3_waf_manual | Deploy the AS3 blobs for scenario SSL+WAF without autodiscovery | Mandatory |
+| make as3_gslb | Deploy the AS3 blobs for scenario GSLB | Mandatory |
 | make as3_undeploy | Deploy the AS3 blobs to remove ADC configuration for the application | Optional |
 | make ts_cloudwatch | Enable AWS Cloudwatch monitoring using ATS TS module | Optional |
 | make ts_graphite | Enable Graphite monitoring using ATS TS module | Optional |
