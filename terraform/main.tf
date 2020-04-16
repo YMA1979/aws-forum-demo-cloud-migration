@@ -41,6 +41,7 @@ resource "aws_secretsmanager_secret" "bigip" {
     Name        = format("%s-bigip-secret-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 }
 resource "aws_secretsmanager_secret_version" "bigip-pwd" {
@@ -70,24 +71,28 @@ module "vpc" {
     Name        = format("%s-vpc-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 
   public_subnet_tags = {
     Name        = format("%s-pub-subnet-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 
   public_route_table_tags = {
     Name        = format("%s-pub-rt-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 
   igw_tags = {
     Name        = format("%s-igw-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 }
 
@@ -106,6 +111,7 @@ module "web_server_sg" {
   tags = {
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 }
 
@@ -124,6 +130,7 @@ module "web_server_secure_sg" {
   tags = {
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 }
 
@@ -140,9 +147,9 @@ module "bigip_mgmt_secure_sg" {
   ingress_cidr_blocks = ["0.0.0.0/0"]
 
   tags = {
-    Name        = format("%s-mgmt-secure-sg-%s", local.setup.owner, random_id.id.hex)
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 }
 
@@ -161,6 +168,7 @@ module "ssh_secure_sg" {
   tags = {
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 }
 
@@ -179,6 +187,7 @@ module "grafana_sg" {
   tags = {
     Terraform   = "true"
     Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
   }
 }
 

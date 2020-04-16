@@ -43,7 +43,7 @@
     ####################################
     # Perform TS Deployment Cloudwatch #
     ####################################
-    - name: Process jinja template and store result for artifact storage
+    - name: Process jinja template and store result for artifact storage (cloudwatch json blob for TS)
       template:
         src: templates/ts/cloudwatch.json.j2
         dest: "{{ outputfolder }}/ts_cloudwatch.json"
@@ -60,7 +60,7 @@
         atc_retries: 5
       tags: cloudwatch
 
-    - name: Store result of TS registration for artifact storage
+    - name: Store result of TS registration for artifact storage (cloudwatch json blob for TS)
       copy:
         content: |
           {{ (atc_TS_status.json is defined) | ternary(atc_TS_status.json | to_nice_json(indent=2), atc_TS_status.content) }}
@@ -70,21 +70,26 @@
     ##################################
     # Perform TS Deployment Graphite #
     ##################################
-    - name:  Get a list of private ip address of the target pool members for this application
+    - name:  Get the private and public ip of the host running graphite/grafana/statsd
       set_fact:
+        grafana_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
         graphite_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
+        statsd_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
         grafana_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
+        graphite_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
+        statsd_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
       vars:
         group_name: "tag_Role_graphite_grafana"
-      tags: graphite_grafana
 
-    - name: Process jinja template and store result for artifact storage
+    ### Graphite Specific ###
+    - name: Process jinja template and store result for artifact storage (graphite json blob for TS)
       template:
         src: templates/ts/graphite.json.j2
         dest: "{{ outputfolder }}/ts_graphite.json"
         mode: 0644
       tags: graphite_grafana
   
+     ### Graphite Specific ###
     - name: Perform TS registration
       include_role:
         name: f5devcentral.atc_deploy
@@ -95,20 +100,50 @@
         atc_retries: 5
       tags: graphite_grafana
 
-    - name: Store result of TS registration for artifact storage
+    ### Graphite Specific ###
+    - name: Store result of TS registration for artifact storage (graphite json blob for TS)
       copy:
         content: |
           {{ (atc_TS_status.json is defined) | ternary(atc_TS_status.json | to_nice_json(indent=2), atc_TS_status.content) }}
         dest: "{{ outputfolder }}/ts_graphite_result.json"
       tags: graphite_grafana
 
+    ### Statsd Specific ###
+    - name: Process jinja template and store result for artifact storage (statsd json blob for TS)
+      template:
+        src: templates/ts/statsd.json.j2
+        dest: "{{ outputfolder }}/ts_statsd.json"
+        mode: 0644
+      tags: statsd_grafana
+
+    ### Statds Specific ###
+    - name: Perform TS registration
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "{{ outputfolder }}/ts_statsd.json"
+        atc_delay: 10
+        atc_retries: 5
+      tags: statsd_grafana
+
+    ### Statds Specific ###
+    - name: Store result of TS registration for artifact storage (statsd json blob for TS)
+      copy:
+        content: |
+          {{ (atc_TS_status.json is defined) | ternary(atc_TS_status.json | to_nice_json(indent=2), atc_TS_status.content) }}
+        dest: "{{ outputfolder }}/ts_statsd_result.json"
+      tags: statsd_grafana
+
+    ### Grafana DataSource Specific
     - name: Process jinja template and store result for artifact storage
       template:
         src: templates/grafana/datasource_graphite.json.j2
         dest: "{{ outputfolder }}/grafana_datasource_graphite.json"
         mode: 0644
       tags: graphite_grafana
-  
+
+    ### Grafana DataSource Specific
     - name: Check of graphite datasource for grafana already exists
       uri:
         url: "http://{{ grafana_public_ip }}:3000/api/datasources"
@@ -123,6 +158,7 @@
       delay: 10
       tags: graphite_grafana
 
+    ### Grafana DataSource Specific
     - name: Add graphite datasource into grafana
       uri:
         url: "http://{{ grafana_public_ip }}:3000/api/datasources"
@@ -140,6 +176,14 @@
       when: >
         (get_result.json is defined and get_result.json | length == 0) or get_result.json is undefined
       tags: graphite_grafana
+
+    - name: Print the URL for Grafana / Graphite / Statsd
+      debug:
+        msg: >
+          Verify if metrics and/or events are arriving at the following admin UI's
+            > Grafana UI   : http://{{ grafana_public_ip }}:3000
+            > Graphite UI  : http://{{ graphite_public_ip }}:80
+            > Statsd Admin : echo "gauges" | nc 34.244.144.97 8126
 
   ####################################
   # Manual verification on BIG-IP(s) #

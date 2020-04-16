@@ -1,7 +1,6 @@
 #
 # Create IAM Role
 #
-
 data "aws_iam_policy_document" "bigip_role" {
   version = "2012-10-17"
   statement {
@@ -16,18 +15,18 @@ data "aws_iam_policy_document" "bigip_role" {
 }
 
 resource "aws_iam_role" "bigip_role" {
-  name               = format("%s-bigip-role", var.owner)
+  name               = format("%s-bigip-role-%s", var.owner, var.random_id)
   assume_role_policy = data.aws_iam_policy_document.bigip_role.json
 
   tags = {
-    Name        = format("%s-bigip-role-%s", var.owner, var.random_id)
     Terraform   = "true"
     Environment = var.environment
+    Owner       = var.owner
   }
 }
 
 resource "aws_iam_instance_profile" "bigip_profile" {
-  name = format("%s-bigip-profile", var.owner)
+  name = format("%s-bigip-profile-%s", var.owner, var.random_id)
   role = aws_iam_role.bigip_role.name
 }
 
@@ -45,7 +44,7 @@ data "aws_iam_policy_document" "bigip_policy" {
 }
 
 resource "aws_iam_role_policy" "bigip_policy" {
-  name   = format("%s-bigip-policy", var.owner)
+  name   = format("%s-bigip-policy-%s", var.owner, var.random_id)
   role   = aws_iam_role.bigip_role.id
   policy = data.aws_iam_policy_document.bigip_policy.json
 }
