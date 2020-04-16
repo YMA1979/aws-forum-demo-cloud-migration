@@ -165,13 +165,13 @@ module "ssh_secure_sg" {
 }
 
 #
-# Create a security group for http-3000 grafana traffic
+# Create a security group for Grafana dashboard
 #
 module "grafana_sg" {
-  source = "github.com/AllBitsBVBA/terraform-aws-security-group//modules/grafana?ref=v3.4.0.2"
+  source = "terraform-aws-modules/security-group/aws//modules/grafana"
 
   name        = format("%s-grafana-sg-%s", local.setup.owner, random_id.id.hex)
-  description = "Security group for HTTP port 3000 (Grafana Dashboard)"
+  description = "Security group for Grafana Dashboard"
   vpc_id      = module.vpc.vpc_id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]

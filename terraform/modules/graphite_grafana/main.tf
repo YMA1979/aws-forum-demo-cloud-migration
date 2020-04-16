@@ -16,7 +16,7 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_instance" "graphite_grafana" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.medium"
+  instance_type          = "t3.medium"
   key_name               = var.ec2_key_name
   monitoring             = true
   vpc_security_group_ids = var.sec_group_ids
