@@ -25,6 +25,10 @@ atc:
     tenant: Team_A
     application: NginxWebServer
 
+equinix:
+    device_address: 88.84.155.38
+    device_virtual_server: 88.84.155.37
+
 ## Nginx Webserver variables
 webserver:
     displayname: Nginx Demo WebServer
