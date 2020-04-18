@@ -158,7 +158,7 @@
       delay: 10
       tags: graphite_grafana
 
-    ### Grafana DataSource Specific
+    ### Grafana Datasource Specific
     - name: Add graphite datasource into grafana
       uri:
         url: "http://{{ grafana_public_ip }}:3000/api/datasources"
@@ -175,6 +175,29 @@
       delay: 10
       when: >
         (get_result.json is defined and get_result.json | length == 0) or get_result.json is undefined
+      tags: graphite_grafana
+
+    ### Grafana Dashboard Specific
+    - name: Add graphite statsd dashboard into grafana
+      uri:
+        url: "http://{{ grafana_public_ip }}:3000/api/dashboards/db"
+        user: admin
+        password: admin
+        method: POST
+        body: >
+          {
+            "dashboard": {{ lookup('file','templates/grafana//statsd_dashboard.json') }},
+            "folderId": 0,
+            "overwrite": false
+          }
+        force_basic_auth: yes
+        status_code: 200
+        body_format: json
+      register: post_result
+      until: post_result.status == 200
+      retries: 30
+      delay: 10
+
       tags: graphite_grafana
 
     - name: Print the URL for Grafana / Graphite / Statsd

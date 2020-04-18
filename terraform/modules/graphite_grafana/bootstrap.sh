@@ -22,5 +22,5 @@ docker run -d \
     --name grafana \
     --restart=always \
     -p 3000:3000 \
-    -e "GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource" \
+    -e "GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,btplc-trend-box-panel,michaeldmoore-multistat-panel,vonage-status-panel,grafana-piechart-panel,briangann-datatable-panel,mtanda-histogram-panel" \
     grafana/grafana

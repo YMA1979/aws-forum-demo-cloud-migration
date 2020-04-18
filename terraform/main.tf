@@ -192,6 +192,25 @@ module "grafana_sg" {
 }
 
 #
+# Create a security group for Graphite/StatsD dashboard
+#
+module "graphite_statsd_sg" {
+  source = "terraform-aws-modules/security-group/aws//modules/graphite-statsd"
+
+  name        = format("%s-graphite-statsd-sg-%s", local.setup.owner, random_id.id.hex)
+  description = "Security group for Graphite and StatsD"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+
+  tags = {
+    Terraform   = "true"
+    Environment = local.setup.aws.environment
+    Owner       = local.setup.owner
+  }
+}
+
+#
 # Create BIG-IP
 #
 module bigip {
@@ -256,7 +275,8 @@ module graphite_grafana {
 
   sec_group_ids = [
     module.web_server_sg.this_security_group_id,
-    module.grafana_sg.this_security_group_id
+    module.grafana_sg.this_security_group_id,
+    module.graphite_statsd_sg.this_security_group_id
   ]
 }
 
