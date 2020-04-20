@@ -72,12 +72,15 @@
     ##################################
     - name:  Get the private and public ip of the host running graphite/grafana/statsd
       set_fact:
-        grafana_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
-        graphite_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
-        statsd_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
-        grafana_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
-        graphite_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
-        statsd_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
+        grafana_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}"
+        graphite_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}"
+        statsd_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}"
+        grafana_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}"
+        graphite_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}"
+        statsd_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}"
+        grafana_public_dns: "{{ groups[group_name] | map('extract', hostvars, 'public_dns_name') | list | first }}"
+        graphite_public_dns: "{{ groups[group_name] | map('extract', hostvars, 'public_dns_name') | list | first }}"
+        statsd_public_dns: "{{ groups[group_name] | map('extract', hostvars, 'public_dns_name') | list | first }}"
       vars:
         group_name: "tag_Role_graphite_grafana"
 
@@ -203,17 +206,18 @@
       debug:
         msg: >
           Verify if metrics and/or events are arriving at the following admin UI's
-            > Grafana UI   : http://{{ grafana_public_ip }}:3000
-            > Graphite UI  : http://{{ graphite_public_ip }}:80
-            > Statsd Admin : echo "gauges" | nc 34.244.144.97 8126
+            > Grafana UI   : http://{{ grafana_public_dns }}:3000
+            > Graphite UI  : http://{{ graphite_public_dns }}:80
+            > Statsd Admin : echo "gauges" | nc {{ statsd_public_dns }} 8126
 
     #############################
     # Perform TS Deployment ELK #
     #############################
     - name:  Get the private and public ip of the host running elk (elasticsearch, logstash, kibana)
       set_fact:
-        elk_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
-        elk_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
+        elk_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}"
+        elk_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}"
+        elk_public_dns: "{{ groups[group_name] | map('extract', hostvars, 'public_dns_name') | list | first }}"
       vars:
         group_name: "tag_Role_elk"
 
@@ -245,11 +249,11 @@
       debug:
         msg: >
           Verify if metrics and/or events are arriving at the following admin UI's
-          > Elasticsearch UI  : http://{{ elk_public_ip }}:9200
-          > ES Cluster Health : http://{{ elk_public_ip }}:9200/_cluster/health
-          > ES Indices        : http://{{ elk_public_ip }}:9200/_cat/indices
-          > Kibana UI         : http://{{ elk_public_ip }}:5601
-  
+            > Elasticsearch UI  : http://{{ elk_public_dns }}:9200
+            > ES Cluster Health : http://{{ elk_public_dns }}:9200/_cluster/health
+            > ES Indices        : http://{{ elk_public_dns }}:9200/_cat/indices?v
+            > Kibana UI         : http://{{ elk_public_dns }}:5601
+
   ####################################
   # Manual verification on BIG-IP(s) #
   ####################################

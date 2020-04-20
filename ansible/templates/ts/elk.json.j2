@@ -11,9 +11,9 @@
         "class": "Telemetry_Consumer",
         "type": "ElasticSearch",
         "host": "{{ elk_private_ip }}",
-        "index": "testindex",
+        "index": "bigip",
         "port": 9200,
-        "protocol": "https",
+        "protocol": "http",
         "dataType": "f5.telemetry"
     },
     "My_Listener": {
