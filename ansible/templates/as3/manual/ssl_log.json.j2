@@ -19,9 +19,9 @@
           "pool": "WebServerPoolHttps",
           "profileHTTP": "basic",
           "serverTLS": "WebTLS",
-          "policyWAF": {
-						"use": "{{ atc.waf_profile }}"
-					}
+          "profileTrafficLog": {
+            "bigip": "/Common/Shared/{{ atc.elk_log_profile }}"
+          }
         },
         "WebServerPoolHttps": {
           "class": "Pool",
@@ -55,11 +55,6 @@
           "privateKey": {
             "bigip": "/Common/default.key"
           }
-        },
-        "{{ atc.waf_profile }}": {
-			    "class": "WAF_Policy",
-    		  "url": "https://raw.githubusercontent.com/f5devcentral/f5-automation-labs/master/files/asm-policies/demo-asm-policy-linux-high.xml",
-			    "ignoreChanges": true
         }
       }
     }

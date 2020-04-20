@@ -19,9 +19,9 @@
           "pool": "WebServerPoolHttps",
           "profileHTTP": "basic",
           "serverTLS": "WebTLS",
-          "policyWAF": {
-						"use": "{{ atc.waf_profile }}"
-					}
+          "profileTrafficLog": {
+            "bigip": "/Common/Shared/{{ atc.elk_log_profile }}"
+          }
         },
         "WebServerPoolHttps": {
           "class": "Pool",
@@ -30,12 +30,15 @@
           "members": [
             {
               "servicePort": 80,
-              "serverAddresses": [
-{% filter indent(16, true) %}
-{% for application_private_ip in application_private_ips %}"{{ application_private_ip }}"{% if not loop.last %},{% endif %}{{ '\n' -}}
-{% endfor %}
-{% endfilter %}
-              ]
+              "addressDiscovery": "aws",
+              "updateInterval": 30,
+              "tagKey": "Autodiscovery",
+              "tagValue": "true",
+              "addressRealm": "private",
+              "accessKeyId": "{{ aws_access_key_id }}",
+              "secretAccessKey": "{{ aws_secret_access_key }}",
+              "region": "{{ aws.region }}",
+              "credentialUpdate": true
             }
           ]
         },
@@ -55,11 +58,6 @@
           "privateKey": {
             "bigip": "/Common/default.key"
           }
-        },
-        "{{ atc.waf_profile }}": {
-			    "class": "WAF_Policy",
-    		  "url": "https://raw.githubusercontent.com/f5devcentral/f5-automation-labs/master/files/asm-policies/demo-asm-policy-linux-high.xml",
-			    "ignoreChanges": true
         }
       }
     }

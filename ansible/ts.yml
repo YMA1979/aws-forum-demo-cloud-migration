@@ -208,7 +208,7 @@
           Verify if metrics and/or events are arriving at the following admin UI's
             > Grafana UI   : http://{{ grafana_public_dns }}:3000
             > Graphite UI  : http://{{ graphite_public_dns }}:80
-            > Statsd Admin : echo "gauges" | nc {{ statsd_public_dns }} 8126
+            > StatsD Admin : echo "gauges" | nc {{ statsd_public_dns }} 8126
 
     #############################
     # Perform TS Deployment ELK #

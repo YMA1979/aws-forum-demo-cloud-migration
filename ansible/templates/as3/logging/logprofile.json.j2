@@ -1,0 +1,59 @@
+{
+  "class": "AS3",
+  "action": "deploy",
+  "declaration": {
+    "class": "ADC",
+    "schemaVersion": "3.10.0",
+    "remark": "Example depicting creation of BIG-IP module log profiles",
+    "Common": {
+      "Shared": {
+        "class": "Application",
+        "template": "shared",
+        "telemetryLocalRule": {
+          "remark": "Only required when TS is a local listener",
+          "class": "iRule",
+          "iRule": "when CLIENT_ACCEPTED {\n  node 127.0.0.1 6514\n}"
+        },
+        "{{ atc.elk_log_profile }}VIP": {
+          "remark": "Only required when TS is a local listener",
+          "class": "Service_TCP",
+          "virtualAddresses": [
+            "255.255.255.254"
+          ],
+          "virtualPort": 6514,
+          "iRules": [
+            "telemetryLocalRule"
+          ]
+        },
+        "{{ atc.elk_log_profile }}Pool": {
+          "class": "Pool",
+          "members": [
+            {
+              "enable":true,
+              "serverAddresses": [
+                "255.255.255.254"
+              ],
+              "servicePort":6514
+            }
+          ],
+          "monitors": [
+            {
+              "bigip": "/Common/tcp"
+            }
+          ]
+        },
+        "{{ atc.elk_log_profile }}": {
+          "class": "Traffic_Log_Profile",
+          "requestSettings": {
+            "requestEnabled":true,
+            "requestProtocol": "mds-tcp",
+            "requestPool": {
+              "use": "{{ atc.elk_log_profile }}Pool"
+            },
+            "requestTemplate": "event_source=\"request_logging\",hostname=\"$BIGIP_HOSTNAME\",client_ip=\"$CLIENT_IP\",server_ip=\"$SERVER_IP\",http_method=\"$HTTP_METHOD\",http_uri=\"$HTTP_URI\",virtual_name=\"$VIRTUAL_NAME\",event_timestamp=\"$DATE_HTTP\""
+          }
+        }
+      }
+    }
+  }
+}

@@ -6,24 +6,24 @@
     "schemaVersion": "3.7.0",
     "id": "DemoWebServers",
     "label": "DemoWebServers",
-    "remark": "DemoWebServers",
+    "remark": "An Demo Webserver exposed as an HTTP Application Service",
     "{{ atc.tenant }}": {
       "class": "Tenant",
       "{{ atc.application }}": {
         "class": "Application",
         "template": "generic",
         "WebServerVIP": {
-          "class": "Service_HTTPS",
+          "class": "Service_HTTP",
           "virtualAddresses": ["0.0.0.0"],
           "snat": "auto",
-          "pool": "WebServerPoolHttps",
-          "profileHTTP": "basic",
-          "serverTLS": "WebTLS"
+          "pool": "WebServerPool",
+          "profileTrafficLog": {
+            "bigip": "/Common/Shared/{{ atc.elk_log_profile }}"
+          }
         },
-        "WebServerPoolHttps": {
+        "WebServerPool": {
           "class": "Pool",
           "monitors": ["http"],
-          "reselectTries": 100,
           "members": [
             {
               "servicePort": 80,
@@ -38,23 +38,6 @@
               "credentialUpdate": true
             }
           ]
-        },
-        "WebTLS": {
-          "class": "TLS_Server",
-          "certificates": [
-            {
-              "certificate": "WebCert"
-            }
-          ]
-        },
-        "WebCert": {
-          "class": "Certificate",
-          "certificate": {
-            "bigip": "/Common/default.crt"
-          },
-          "privateKey": {
-            "bigip": "/Common/default.key"
-          }
         }
       }
     }

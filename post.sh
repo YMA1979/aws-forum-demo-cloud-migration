@@ -19,8 +19,8 @@ function print-help {
 if [[ -z "${1}" || -z "${2}" || -z "${3}" ]]; then
     print-help
 else
-    BIGIP_USER=$( grep 'bigiq_admin_user:' setup.yml | tail -n1 | awk '{ print $2}' | tr -d '"' )
-    BIGIP_PASS=$( grep 'bigip_admin_password:' setup.yml | tail -n1 | awk '{ print $2}' | tr -d '"' )
+    BIGIP_USER=$( grep 'admin_user:' setup.yml | head -n1 | awk '{ print $2}' | tr -d '"' )
+    BIGIP_PASS=$( grep 'admin_password:' setup.yml | head -n1 | awk '{ print $2}' | tr -d '"' )
 
     if [[ -z "${BIGIP_USER}}" || -z "${BIGIP_PASS}}" ]]; then
         echo -e "${RED}Could not detected 'bigip_admin_user' or 'bigip_admin_password' in setup.yml ${NC}"

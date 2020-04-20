@@ -18,9 +18,9 @@
           "snat": "auto",
           "pool": "WebServerPoolHttps",
           "profileHTTP": "basic",
-          "serverTLS": "webtls",
+          "serverTLS": "WebTLS",
           "policyWAF": {
-						"use": "linux_high"
+						"use": "{{ atc.waf_profile }}"
 					}
         },
         "WebServerPoolHttps": {
@@ -42,15 +42,15 @@
             }
           ]
         },
-        "webtls": {
+        "WebTLS": {
           "class": "TLS_Server",
           "certificates": [
             {
-              "certificate": "webcert"
+              "certificate": "WebCert"
             }
           ]
         },
-        "webcert": {
+        "WebCert": {
           "class": "Certificate",
           "certificate": {
             "bigip": "/Common/default.crt"
@@ -59,9 +59,9 @@
             "bigip": "/Common/default.key"
           }
         },
-        "linux_high": {
+        "{{ atc.waf_profile }}": {
 			    "class": "WAF_Policy",
-    		    "url": "https://raw.githubusercontent.com/f5devcentral/f5-automation-labs/master/files/asm-policies/demo-asm-policy-linux-high.xml",
+    		  "url": "https://raw.githubusercontent.com/f5devcentral/f5-automation-labs/master/files/asm-policies/demo-asm-policy-linux-high.xml",
 			    "ignoreChanges": true
         }
       }

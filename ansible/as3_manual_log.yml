@@ -20,21 +20,6 @@
           password: "{{ bigip.admin_password }}"
           validate_certs: false          
 
-    - name: Fetch AWS credentials (needed for auto-discovery)
-      shell: aws configure get aws_access_key_id
-      register: aws_access_key_id
-      changed_when: false
-
-    - name: Fetch AWS credentials (needed for auto-discovery)
-      shell: aws configure get aws_secret_access_key
-      register: aws_secret_access_key
-      changed_when: false
-
-    - name: Register AWS credentials as facts
-      set_fact: 
-        aws_access_key_id={{ aws_access_key_id.stdout }}
-        aws_secret_access_key={{ aws_secret_access_key.stdout }}
-
     - name: Wait for BIG-IP to be ready to take configuration
       bigip_wait:
         timeout: 600
@@ -44,28 +29,66 @@
     # Perform AS3 Deployment #
     ##########################
 
-    - name: Process jinja template and store result for artifact storage (auto pool)
+    ### Logging ###
+    - name: Process jinja template and store result for artifact storage (log profile)
       template:
-        src: "templates/as3/auto/{{ scenario }}.json.j2"
-        dest: "{{ outputfolder }}/as3_auto_{{ scenario }}.json"
+        src: "templates/as3/logging/logprofile.json.j2"
+        dest: "{{ outputfolder }}/logprofile.json"
         mode: 0644
       tags: deploy
-      
-    - name: Perform AS3 deployment (auto pool)
+
+    - name: Perform AS3 deployment (log profile)
       include_role:
         name: f5devcentral.atc_deploy
       vars:
         atc_method: POST
-        atc_declaration_file: "{{ outputfolder }}/as3_auto_{{ scenario }}.json"
+        atc_declaration_file: "{{ outputfolder }}/logprofile.json"
         atc_delay: 10
         atc_retries: 5
       tags: deploy
 
-    - name: Store result of AS3 deployment (auto pool)
+    - name: Store result of AS3 deployment (log profile)
       copy:
         content: |
           {{ (atc_AS3_status.json is defined) | ternary(atc_AS3_status.json | to_nice_json(indent=2), atc_AS3_status.content) }}
-        dest: "{{ outputfolder }}/as3_auto_{{ scenario }}_result.json"
+        dest: "{{ outputfolder }}/logprofile_result.json"
+      tags: deploy
+    
+    ### Application ###
+    - name: Set initial lists to store host names and private ips of application servers (manual pool)
+      set_fact:
+        application_private_ips: []
+      tags: deploy
+
+    - name:  Get a list of private ip address of the target pool members for this application (manual pool)
+      set_fact:
+        application_private_ips: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list }}" 
+      vars:
+        group_name: "tag_Application_{{ atc.application }}"
+      tags: deploy
+
+    - name: Process jinja template and store result for artifact storage (manual pool)
+      template:
+        src: "templates/as3/manual/{{ scenario }}_log.json.j2"
+        dest: "{{ outputfolder }}/as3_manual_{{ scenario }}_log.json"
+        mode: 0644
+      tags: deploy
+      
+    - name: Perform AS3 deployment (manual pool)
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "{{ outputfolder }}/as3_manual_{{ scenario }}_log.json"
+        atc_delay: 10
+        atc_retries: 10
+      tags: deploy
+
+    - name: Store result of AS3 deployment (manual pool)
+      copy:
+        content: |
+          {{ (atc_AS3_status.json is defined) | ternary(atc_AS3_status.json | to_nice_json(indent=2), atc_AS3_status.content) }}
+        dest: "{{ outputfolder }}/as3_manual_{{ scenario }}_log_result.json"
       tags: deploy
 
     ########################
@@ -85,7 +108,7 @@
         atc_method: POST
         atc_declaration_file: "{{ outputfolder }}/as3_remove_tenant.json"
         atc_delay: 10
-        atc_retries: 10
+        atc_retries: 5
       tags: undeploy
 
     - name: Store result of AS3 removal for artifact storage

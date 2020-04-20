@@ -48,6 +48,8 @@ do_unlicense:
 	cd ${ANSIBLE_FOLDER} && ansible-playbook do.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "onboard" ; 
 
 ### AS3 Targets ###
+
+# no logging #
 as3_http_auto:
 	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_auto.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=http" --skip-tags "undeploy" ;
 
@@ -57,9 +59,21 @@ as3_ssl_manual: as3_undeploy
 as3_waf_manual:
 	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_manual.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=waf" --skip-tags "undeploy" ;
 
+# with logging #
+as3_http_auto_log:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_auto_log.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=http" --skip-tags "undeploy" ;
+
+as3_ssl_manual_log: as3_undeploy
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_manual_log.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=ssl" --skip-tags "undeploy" ;
+
+as3_waf_manual_log:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_manual_log.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=waf" --skip-tags "undeploy" ;
+
+# GSLB #
 as3_gslb:
 	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_gslb.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "undeploy" ;
 
+# Undeploy #
 as3_undeploy:
 	cd ${ANSIBLE_FOLDER} && ansible-playbook as3_manual.yml ${ANSIBLE_EXTRA_ARGS} --extra-vars "scenario=http" --skip-tags "deploy" ;
 

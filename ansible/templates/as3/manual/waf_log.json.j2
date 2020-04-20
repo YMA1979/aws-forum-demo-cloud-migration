@@ -21,7 +21,10 @@
           "serverTLS": "WebTLS",
           "policyWAF": {
 						"use": "{{ atc.waf_profile }}"
-					}
+					},
+          "profileTrafficLog": {
+            "bigip": "/Common/Shared/{{ atc.elk_log_profile }}"
+          }
         },
         "WebServerPoolHttps": {
           "class": "Pool",
