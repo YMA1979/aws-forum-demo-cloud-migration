@@ -24,6 +24,8 @@ bigiq:
 atc:
     tenant: Team_A
     application: NginxWebServer
+    waf_profile: LinuxHigh
+    elk_log_profile: ElkLogProfile
 
 equinix:
     device_address: 88.84.155.38
