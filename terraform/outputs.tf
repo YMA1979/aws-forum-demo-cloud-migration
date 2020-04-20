@@ -31,3 +31,15 @@ output "graphite_grafana" {
       grafana_url  : http://${module.graphite_grafana.graphite_grafana_public_dns}:3000
     EOF
 }
+
+# ELK
+output "elk" {
+  value = <<EOF
+
+      private_ips       : ${module.elk.elk_private_ip}
+      public_ips        : ${module.elk.elk_public_ip}
+      public_dns        : ${module.elk.elk_public_dns}
+      elasticsearch_url : http://${module.elk.elk_public_dns}:9200
+      kibana_url        : http://${module.elk.elk_public_dns}:5601
+    EOF
+}

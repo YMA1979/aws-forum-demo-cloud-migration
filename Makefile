@@ -65,16 +65,19 @@ as3_undeploy:
 
 ### TS Targets ###
 ts_cloudwatch:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "graphite_grafana,statsd_grafana,beacon" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "graphite_grafana,statsd_grafana,elk,beacon" ;
 
 ts_graphite_grafana:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,statsd_grafana,beacon" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,statsd_grafana,elk,beacon" ;
 
 ts_statsd_grafana:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,graphite_grafana,beacon" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,graphite_grafana,elk,beacon" ;
+
+ts_elk:
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,graphite_grafana,statsd_grafana,beacon" ;
 
 ts_beacon:
-	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,graphite_grafana,statsd_grafana" ;
+	cd ${ANSIBLE_FOLDER} && ansible-playbook ts.yml ${ANSIBLE_EXTRA_ARGS} --skip-tags "cloudwatch,graphite_grafana,statsd_grafana,elk" ;
 
 ##################
 # Helper Targets #

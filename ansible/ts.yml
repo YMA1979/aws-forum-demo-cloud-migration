@@ -197,7 +197,6 @@
       until: post_result.status == 200
       retries: 30
       delay: 10
-
       tags: graphite_grafana
 
     - name: Print the URL for Grafana / Graphite / Statsd
@@ -208,6 +207,49 @@
             > Graphite UI  : http://{{ graphite_public_ip }}:80
             > Statsd Admin : echo "gauges" | nc 34.244.144.97 8126
 
+    #############################
+    # Perform TS Deployment ELK #
+    #############################
+    - name:  Get the private and public ip of the host running elk (elasticsearch, logstash, kibana)
+      set_fact:
+        elk_private_ip: "{{ groups[group_name] | map('extract', hostvars, 'private_ip_address') | list | first }}" 
+        elk_public_ip: "{{ groups[group_name] | map('extract', hostvars, 'public_ip_address') | list | first }}" 
+      vars:
+        group_name: "tag_Role_elk"
+
+    - name: Process jinja template and store result for artifact storage (elk json blob for TS)
+      template:
+        src: templates/ts/elk.json.j2
+        dest: "{{ outputfolder }}/ts_elk.json"
+        mode: 0644
+      tags: elk
+  
+    - name: Perform TS registration
+      include_role:
+        name: f5devcentral.atc_deploy
+      vars:
+        atc_method: POST
+        atc_declaration_file: "{{ outputfolder }}/ts_elk.json"
+        atc_delay: 10
+        atc_retries: 5
+      tags: elk
+
+    - name: Store result of TS registration for artifact storage (elk json blob for TS)
+      copy:
+        content: |
+          {{ (atc_TS_status.json is defined) | ternary(atc_TS_status.json | to_nice_json(indent=2), atc_TS_status.content) }}
+        dest: "{{ outputfolder }}/ts_elk_result.json"
+      tags: elk
+
+    - name: Print the URL for ELK (Elasticsearch, Logstash and Kibana)
+      debug:
+        msg: >
+          Verify if metrics and/or events are arriving at the following admin UI's
+          > Elasticsearch UI  : http://{{ elk_public_ip }}:9200
+          > ES Cluster Health : http://{{ elk_public_ip }}:9200/_cluster/health
+          > ES Indices        : http://{{ elk_public_ip }}:9200/_cat/indices
+          > Kibana UI         : http://{{ elk_public_ip }}:5601
+  
   ####################################
   # Manual verification on BIG-IP(s) #
   ####################################
