@@ -55,8 +55,8 @@
             "requestErrorPool": {
               "use": "{{ atc.elk_log_profile }}Pool"
             },
-            "requestTemplate": "event_source=\"request_logging\",hostname=\"$BIGIP_HOSTNAME\",client_ip=\"$CLIENT_IP\",client_port=\"$CLIENT_PORT\",server_ip=\"$SERVER_IP\",server_port=\"$SERVER_PORT\",http_method=\"$HTTP_METHOD\",http_uri=\"$HTTP_URI\",http_status=\"$HTTP_STATCODE\",virtual_ip=\"$VIRTUAL_IP\",virtual_name=\"$VIRTUAL_NAME\",virtual_pool_name=\"$VIRTUAL_POOL_NAME\",event_timestamp=\"$DATE_HTTP\"",
-            "requestErrorTemplate": "event_source=\"request_error\",hostname=\"$BIGIP_HOSTNAME\",client_ip=\"$CLIENT_IP\",client_port=\"$CLIENT_PORT\",server_ip=\"$SERVER_IP\",server_port=\"$SERVER_PORT\",http_method=\"$HTTP_METHOD\",http_uri=\"$HTTP_URI\",http_status=\"$HTTP_STATCODE\",virtual_ip=\"$VIRTUAL_IP\",virtual_name=\"$VIRTUAL_NAME\",virtual_pool_name=\"$VIRTUAL_POOL_NAME\",event_timestamp=\"$DATE_HTTP\""
+            "requestTemplate": "event_source=\"request_logging\",hostname=\"$BIGIP_HOSTNAME\",client_ip=\"$CLIENT_IP\",client_port=\"$CLIENT_PORT\",server_ip=\"$SERVER_IP\",server_port=\"$SERVER_PORT\",http_method=\"$HTTP_METHOD\",http_uri=\"$HTTP_URI\",http_status=\"$HTTP_STATCODE\",virtual_ip=\"$VIRTUAL_IP\",virtual_name=\"$VIRTUAL_NAME\",virtual_pool_name=\"$VIRTUAL_POOL_NAME\",event_timestamp=\"$DATE_HTTP\",response_size=\"$RESPONSE_SIZE\",response_msecs=\"$RESPONSE_MSECS\"",
+            "requestErrorTemplate": "event_source=\"request_error\",hostname=\"$BIGIP_HOSTNAME\",client_ip=\"$CLIENT_IP\",client_port=\"$CLIENT_PORT\",server_ip=\"$SERVER_IP\",server_port=\"$SERVER_PORT\",http_method=\"$HTTP_METHOD\",http_uri=\"$HTTP_URI\",http_status=\"$HTTP_STATCODE\",virtual_ip=\"$VIRTUAL_IP\",virtual_name=\"$VIRTUAL_NAME\",virtual_pool_name=\"$VIRTUAL_POOL_NAME\",event_timestamp=\"$DATE_HTTP\",response_size=\"$RESPONSE_SIZE\",response_msecs=\"$RESPONSE_MSECS\""
           },
           "responseSettings": {
             "responseEnabled": true,

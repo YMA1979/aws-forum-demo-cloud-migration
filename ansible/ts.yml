@@ -221,6 +221,28 @@
       vars:
         group_name: "tag_Role_elk"
 
+    ### ElasticSearch Index and Mappings Creation
+    - name: Create the ElasticSearch index and mappings
+      uri:
+        url: "http://{{ elk_public_ip }}:9200/bigip"
+        method: PUT
+        body: "{{ lookup('file','templates/elk//es_index.json') }}"
+        status_code: 200
+        body_format: json
+      tags: elk
+
+    ### Kibana Index and Mappings Creation
+    - name: Create the Kibana index and mappings
+      uri:
+        url: "http://{{ elk_public_ip }}:5601/api/saved_objects/index-pattern/bigip"
+        method: POST
+        body: "{{ lookup('file','templates/elk//kibana_index.json') }}"
+        status_code: 200
+        body_format: json
+        headers:
+          kbn-xsrf: true
+      tags: elk
+
     - name: Process jinja template and store result for artifact storage (elk json blob for TS)
       template:
         src: templates/ts/elk.json.j2
