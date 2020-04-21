@@ -17,6 +17,7 @@
     - name: Wait for BIG-IP to be ready to take configuration
       bigip_wait:
         timeout: 600
+        sleep: 10
         provider: "{{ provider }}"
 
     ######################
@@ -28,7 +29,7 @@
       vars:
         atc_method: GET
         atc_service: Device
-        atc_delay: 10
+        atc_delay: 20
         atc_retries: 60
 
     - name: Store result of DO license verification
