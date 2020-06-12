@@ -229,6 +229,7 @@
         body: "{{ lookup('file','templates/elk//es_index.json') }}"
         status_code: 200
         body_format: json
+      failed_when: false
       tags: elk
 
     ### Kibana Index and Mappings Creation
@@ -241,6 +242,7 @@
         body_format: json
         headers:
           kbn-xsrf: true
+      failed_when: false
       tags: elk
 
     - name: Process jinja template and store result for artifact storage (elk json blob for TS)

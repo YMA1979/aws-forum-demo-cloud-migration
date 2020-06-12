@@ -192,6 +192,7 @@ module elk {
 
   sec_group_ids = [
     module.security.web_server_sg,
+    module.security.ssh_secure_sg,
     module.security.elasticsearch_sg,
     module.security.kibana_sg
   ]

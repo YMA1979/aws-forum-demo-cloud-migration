@@ -4,6 +4,9 @@
   "mappings":{
     "f5.telemetry":{
       "properties":{
+        "@timestamp":{
+          "type":"date"
+        },
         "data":{
           "properties":{
             "application":{
@@ -107,6 +110,110 @@
             }
           }
         },
+        "geoip":{
+          "properties":{
+            "country_code2":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "country_name":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "region_name":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "longitude":{
+              "type":"float"
+            },
+            "continent_code":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "country_code3":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "postal_code":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "ip":{
+              "type":"ip"
+            },
+            "latitude":{
+              "type":"float"
+            },
+            "region_code":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "timezone":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "city_name":{
+              "type":"text",
+              "fields":{
+                "keyword":{
+                  "type":"keyword",
+                  "ignore_above":256
+                }
+              }
+            },
+            "location":{
+              "properties":{
+                "lon":{
+                  "type":"float"
+                },
+                "lan":{
+                  "type":"float"
+                }
+              }
+            }
+          }
+        },
         "telemetryEventCategory":{
           "type":"text",
           "fields":{
@@ -124,6 +231,9 @@
       "number_of_shards":"1",
       "number_of_replicas":"1",
       "mapping": {
+        "total_fields": {
+          "limit": "2000"
+        },
         "ignore_malformed": "true"
         }
     }
