@@ -32,7 +32,7 @@ The following things are needed to run the demo
 
 You will also need to copy setup.change.yml to setup.yml and adjust the file accordingly. Variables that are absolutely necessary are :
  - owner
- - aws.ec2_key_name
+ - aws.ec2_key_name (make sure this EC2 key pair exists for the AWS region you are targetting!)
  - bigip.admin_password
  - bigiq.admin_password
 
