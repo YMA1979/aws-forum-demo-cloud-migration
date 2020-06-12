@@ -22,10 +22,11 @@ The following things are needed to run the demo
  - local **aws credentials should be available** using the aws cli
 
     ```
-    $ aws configure
-        AWS Access Key ID [None]: AKIBBOSFODNN7EXAMPLE
-        AWS Secret Access Key [None]: wJalrXUtdfrMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        Default region name [None]: eu-west-1
+    $ cat ~/.aws/credentials
+        [default]
+        aws_access_key_id = BLABLABLA
+        aws_secret_access_key = BLABLABLA
+        aws_session_token = BLABLABLA
     ```
 
 
