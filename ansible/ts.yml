@@ -285,7 +285,7 @@
     - name: Final result verification on BIG-IP 
       debug:
         msg: >
-          Verify on BIG-IQ(s) if your desired results was achieved
+          Verify on BIG-IP if your desired result was achieved
             > Admin UI   : https://{{ public_dns_name }}:8443
             > REST URI   : https://{{ public_dns_name }}:8443/mgmt/shared/telemetry/declare
             > DOCS URL   : https://clouddocs.f5.com/products/extensions/f5-telemetry-streaming/latest
